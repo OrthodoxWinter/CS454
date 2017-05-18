@@ -24,7 +24,6 @@ int sockfd;
 void read_inputs() {
 	string input;
 	while (getline(cin, input)) {
-		cout << "read input " << input << endl;
 		lock_guard<mutex> lock(mutex);
 		input_buffer.push(input);
 		cv.notify_one();
@@ -49,7 +48,6 @@ void send_to_server(int sockfd, string input) {
 		perror("can't send string");
 		exit(1);
 	}
-	cout << "send string " << input << endl;
 	sleep(2);
 	char *response = new char[len];
 	if (recv_all(sockfd, response, len) < 0) {
@@ -100,8 +98,6 @@ int main() {
 		perror("error connecting");
 		exit(2);
 	}
-
-	cout << "successfully connected" << endl;
 
 	thread input (read_inputs);
 	thread execute (send_request);

@@ -22,7 +22,6 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
 		perror("can't accept");
 		exit(1);
 	}
-	cout << "Accepted socket " << new_client_socket << endl;
 	FD_SET(new_client_socket, master_fds);
 	all_sockets.insert(new_client_socket);
 	return new_client_socket;
@@ -56,7 +55,7 @@ int process_request(int socket) {
 		exit(1);
 	}
 	string str(buffer);
-	cout << "received string " << str << endl;
+	cout << str << endl;
 	to_title_case(buffer, buffer_size - 1);
 	send_all(socket, buffer, buffer_size);
 	delete [] buffer;
