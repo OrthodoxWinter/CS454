@@ -19,8 +19,10 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
 	socklen_t addrlen = sizeof remoteaddr;
 	int new_client_socket = accept(socket, (struct sockaddr*) &remoteaddr, &addrlen);
 	if (new_client_socket < 0) {
+		perror("can't accept");
 		exit(1);
 	}
+	cout << "Accepted socket " << new_client_socket << endl;
 	FD_SET(new_client_socket, master_fds);
 	all_sockets.insert(new_client_socket);
 	return new_client_socket;
@@ -36,6 +38,28 @@ void to_title_case(char *str, unsigned int len) {
 			str[i] = tolower(str[i]);
 		}
 	}
+}
+
+int process_request(int socket) {
+	unsigned int string_size = 0;
+	int status = recv_all(socket, (char *) &string_size, sizeof string_size);
+	if (status < 0) {
+		perror("can't receive string size from client");
+		exit(1);
+	} else if (status == 0) {
+		return 0;
+	}
+	unsigned int buffer_size = ntohl(string_size);
+	char *buffer = new char[buffer_size];
+	if (recv_all(socket, buffer, buffer_size) < 0) {
+		perror("can't receive string from client");
+		exit(1);
+	}
+	string str(buffer);
+	cout << "received string " << str << endl;
+	to_title_case(buffer, buffer_size - 1);
+	send_all(socket, buffer, buffer_size);
+	delete [] buffer;
 }
 
 int main(int argc, char *argv[]) {
@@ -65,76 +89,34 @@ int main(int argc, char *argv[]) {
 	}
 	cout << "port number " << ntohs(server_addr.sin_port) << endl;
 
-	struct sockaddr_storage remoteaddr;
-	socklen_t addrlen = sizeof remoteaddr;
-	int new_client_socket = accept(listener, (struct sockaddr*) &remoteaddr, &addrlen);
-	if (new_client_socket < 0) {
-		perror("can't accept");
-		exit(1);
-	}
-
-	for (;;) {
-		unsigned int string_size = 0;
-		if (recv_all(new_client_socket, (char *) &string_size, sizeof string_size) < 0) {
-			perror("can't receive string size from client");
-			exit(1);
-		}
-		unsigned int buffer_size = ntohl(string_size);
-		char *buffer = new char[buffer_size];
-		if (recv_all(new_client_socket, buffer, buffer_size) < 0) {
-			perror("can't receive string from client");
-			exit(1);
-		}
-		string str(buffer);
-		cout << "received string " << str << endl;
-		to_title_case(buffer, buffer_size - 1);
-		send_all(new_client_socket, buffer, buffer_size);
-		delete [] buffer;
-	}
-
-	/*
-	fd_set master_fds;
+	fd_set master_fds, read_fds;
 	int fdmax;
-	struct sockaddr_storage remoteaddr;
 	FD_SET(listener, &master_fds);
 	fdmax = listener;
 	set<int> all_sockets;
 	all_sockets.insert(listener);
+
 	for (;;) {
-		if (select(fdmax + 1, &master_fds, NULL, NULL, NULL) < 0) {
+		read_fds = master_fds;
+		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
             exit(1);
         }
         for (int socket : all_sockets) {
-        	if (FD_ISSET(socket, master_fds)) {
-				if (socket == listener) {
-					int new_client_socket = accept_new_client(socket, &master_fds, all_sockets);
-                    if (newfd > fdmax) {
-                        fdmax = newfd;
+        	if (FD_ISSET(socket, &read_fds)) {
+        		if (socket == listener) {
+        			int new_client_socket = accept_new_client(listener, &master_fds, all_sockets);
+                    if (new_client_socket > fdmax) {
+                        fdmax = new_client_socket;
                     }
-				} else {
-        			int string_size;
-        			int recv_status = recv_all(socket, (const char *) &string_size, 4);
-        			if (recv_status > 0) {
-    					string_size = ntohl(string_size);
-    					char *buffer = new char[string_size];
-    					recv_status = recv_all(socket, buffer, string_size);
-    					if (recv_status > 0) {
-    						//convert string to upper case and send back to client
-    					} else if (recv_status == 0) {
-    						all_sockets.erase(socket);
-    						FD_CLR(socket, master_fds);
-    					} else {
-    						exit(1);
-    					}
-        			} else if (recv_status == 0) {
-        				all_sockets.erase(socket);
-						FD_CLR(socket, master_fds);
-        			} else {
-        				exit(1);
-        			}
+        		} else {
+    				if (process_request(socket) == 0) {
+    					FD_CLR(socket, &master_fds);
+    					all_sockets.erase(socket);
+    					fdmax = *all_sockets.rbegin();
+    					close(socket);
+    				}
         		}
         	}
         }
 	}
-	*/
 }

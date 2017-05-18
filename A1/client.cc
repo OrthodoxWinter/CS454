@@ -24,11 +24,17 @@ int sockfd;
 void read_inputs() {
 	string input;
 	while (getline(cin, input)) {
+		cout << "read input " << input << endl;
 		lock_guard<mutex> lock(mutex);
 		input_buffer.push(input);
 		cv.notify_one();
 	}
-	terminate_client = true;
+
+	{
+		lock_guard<mutex> lock(mutex);
+		terminate_client = true;
+		cv.notify_one();
+	}
 }
 
 void send_to_server(int sockfd, string input) {
@@ -56,11 +62,17 @@ void send_to_server(int sockfd, string input) {
 
 void send_request() {
 	string request_string;
-	while (!terminate_client) {
+	for (;;) {
 		{
 			unique_lock<mutex> lk(mtx);
+			if (terminate_client) {
+				return;
+			}
 			while (input_buffer.empty()) {
 				cv.wait(lk);
+				if (terminate_client) {
+					return;
+				}
 			}
 			request_string = input_buffer.front();
 			input_buffer.pop();
