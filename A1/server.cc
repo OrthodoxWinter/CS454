@@ -40,7 +40,7 @@ void to_title_case(char *str, unsigned int len) {
 }
 
 int process_request(int socket) {
-	unsigned int string_size = 0;
+	uint32_t string_size = 0;
 	int status = recv_all(socket, (char *) &string_size, sizeof string_size);
 	if (status < 0) {
 		perror("can't receive string size from client");
@@ -86,7 +86,14 @@ int main(int argc, char *argv[]) {
 		perror("can't get sockname");
 		exit(1);
 	}
-	cout << "port number " << ntohs(server_addr.sin_port) << endl;
+
+	char hostname_buf[1024];
+	hostname_buf[1023] = '\0';
+	gethostname(hostname_buf, 1023);
+	string hostname(hostname_buf);
+
+	cout << "SERVER_ADDRESS " << hostname << endl;
+	cout << "SERVER_PORT " << ntohs(server_addr.sin_port) << endl;
 
 	fd_set master_fds, read_fds;
 	int fdmax;

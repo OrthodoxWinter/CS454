@@ -39,7 +39,7 @@ void read_inputs() {
 void send_to_server(int sockfd, string input) {
 	const char *cstr = input.c_str();
 	unsigned int len = strlen(cstr) + 1;
-	unsigned int len_data = htonl(len);
+	uint32_t len_data = htonl(len);
 	if (send_all(sockfd, (const char*) &len_data, sizeof len) < 0) {
 		perror("can't send string size");
 		exit(1);
@@ -86,7 +86,9 @@ int main() {
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 
-	getaddrinfo("ubuntu", "41716", &hints, &addr_info);
+	const char *hostname = getenv("SERVER_ADDRESS");
+	const char *port = getenv("SERVER_PORT");
+	getaddrinfo(hostname, port, &hints, &addr_info);
 	sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 	if (sockfd < 0) {
 		perror("error creating socket");
