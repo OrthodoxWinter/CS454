@@ -105,24 +105,24 @@ int main(int argc, char *argv[]) {
 	for (;;) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
-            exit(1);
-        }
-        for (int socket : all_sockets) {
-        	if (FD_ISSET(socket, &read_fds)) {
-        		if (socket == listener) {
-        			int new_client_socket = accept_new_client(listener, &master_fds, all_sockets);
-                    if (new_client_socket > fdmax) {
-                        fdmax = new_client_socket;
-                    }
-        		} else {
-    				if (process_request(socket) == 0) {
-    					FD_CLR(socket, &master_fds);
-    					all_sockets.erase(socket);
-    					fdmax = *all_sockets.rbegin();
-    					close(socket);
-    				}
-        		}
-        	}
-        }
+			exit(1);
+		}
+		for (int socket : all_sockets) {
+			if (FD_ISSET(socket, &read_fds)) {
+				if (socket == listener) {
+					int new_client_socket = accept_new_client(listener, &master_fds, all_sockets);
+					if (new_client_socket > fdmax) {
+						fdmax = new_client_socket;
+					}
+				} else {
+					if (process_request(socket) == 0) {
+						FD_CLR(socket, &master_fds);
+						all_sockets.erase(socket);
+						fdmax = *all_sockets.rbegin();
+						close(socket);
+					}
+				}
+			}
+		}
 	}
 }
