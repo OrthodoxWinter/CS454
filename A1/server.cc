@@ -49,6 +49,7 @@ int process_request(int socket) {
 		return 0;
 	}
 	unsigned int buffer_size = ntohl(string_size);
+	debug_message("got size " + buffer_size);
 	char *buffer = new char[buffer_size];
 	if (recv_all(socket, buffer, buffer_size) < 0) {
 		debug_message("can't receive string from client");
