@@ -24,6 +24,7 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
 	}
 	FD_SET(new_client_socket, master_fds);
 	all_sockets.insert(new_client_socket);
+	debug_message("got new socket " + to_string(new_client_socket));
 	return new_client_socket;
 }
 
@@ -49,7 +50,7 @@ int process_request(int socket) {
 		return 0;
 	}
 	unsigned int buffer_size = ntohl(string_size);
-	//debug_message("got size " + to_string(buffer_size));
+	debug_message("got size " + to_string(buffer_size));
 	char *buffer = new char[buffer_size];
 	if (recv_all(socket, buffer, buffer_size) < 0) {
 		debug_message("can't receive string from client");

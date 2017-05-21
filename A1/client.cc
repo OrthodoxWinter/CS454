@@ -39,9 +39,10 @@ void read_inputs() {
 }
 
 void send_to_server(int sockfd, string input) {
-	debug_message("trying to send send " + input);
+	debug_message("trying to send " + input);
 	const char *cstr = input.c_str();
 	unsigned int len = strlen(cstr) + 1;
+	debug_message("trying to send size " + to_string(len));
 	uint32_t len_data = htonl(len);
 	if (send_all(sockfd, (const char*) &len_data, sizeof len) < 0) {
 		debug_message("can't send string size");
@@ -101,7 +102,7 @@ int main() {
 	if (connect(sockfd, addr_info->ai_addr, addr_info->ai_addrlen) < 0) {
 		close(sockfd);
 		debug_message("error connecting");
-		exit(2);
+		exit(1);
 	}
 
 	thread input (read_inputs);

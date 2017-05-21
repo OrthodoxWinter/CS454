@@ -1,6 +1,8 @@
 #ifndef __HELP_H__
 #define __HELP_H__ true
 
+//#define DEBUG true
+
 #include <sys/socket.h>
 #include <string>
 #include <iostream>
@@ -32,7 +34,7 @@ int recv_all(int socket, char *buf, unsigned int len) {
 }
 
 void debug_message(std::string str) {
-    #ifndef DEBUG
+    #ifdef DEBUG
     std::cout << "DEBUG: " << str << std::endl;
     #endif
 }
