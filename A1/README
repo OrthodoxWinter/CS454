@@ -1,0 +1,3 @@
+use the make command to compile the code. This will output two executables, stringClient and stringServer.
+First run the server (without arguments). It will print out the server address and port. Then, on the client machine, set the environment variables SERVER_ADDRESS SERVER_PORT according to the server output. You can now run client.
+Once the client is running, you can type strings from the command line. The server will convert the string to title case and send it back, which the client will print out. On the server side, it will print out each string received from client. The server will support up to 5 clients simulaneously.
