@@ -29,7 +29,7 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
 
 void to_title_case(char *str, unsigned int len) {
 	str[0] = toupper(str[0]);
-	for (int i = 1; i < len; i++) {
+	for (unsigned int i = 1; i < len; i++) {
 		char prev_c = str[i - 1];
 		if (isspace(prev_c)) {
 			str[i] = toupper(str[i]);
@@ -49,7 +49,7 @@ int process_request(int socket) {
 		return 0;
 	}
 	unsigned int buffer_size = ntohl(string_size);
-	debug_message("got size " + buffer_size);
+	//debug_message("got size " + to_string(buffer_size));
 	char *buffer = new char[buffer_size];
 	if (recv_all(socket, buffer, buffer_size) < 0) {
 		debug_message("can't receive string from client");
@@ -60,6 +60,7 @@ int process_request(int socket) {
 	to_title_case(buffer, buffer_size - 1);
 	send_all(socket, buffer, buffer_size);
 	delete [] buffer;
+	return 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -117,6 +118,7 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					if (process_request(socket) == 0) {
+						debug_message("closing connection to client");
 						FD_CLR(socket, &master_fds);
 						all_sockets.erase(socket);
 						fdmax = *all_sockets.rbegin();
