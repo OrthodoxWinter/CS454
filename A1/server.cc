@@ -19,7 +19,7 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
 	socklen_t addrlen = sizeof remoteaddr;
 	int new_client_socket = accept(socket, (struct sockaddr*) &remoteaddr, &addrlen);
 	if (new_client_socket < 0) {
-		perror("can't accept");
+		debug_message("can't accept");
 		exit(1);
 	}
 	FD_SET(new_client_socket, master_fds);
@@ -43,7 +43,7 @@ int process_request(int socket) {
 	uint32_t string_size = 0;
 	int status = recv_all(socket, (char *) &string_size, sizeof string_size);
 	if (status < 0) {
-		perror("can't receive string size from client");
+		debug_message("can't receive string size from client");
 		exit(1);
 	} else if (status == 0) {
 		return 0;
@@ -51,7 +51,7 @@ int process_request(int socket) {
 	unsigned int buffer_size = ntohl(string_size);
 	char *buffer = new char[buffer_size];
 	if (recv_all(socket, buffer, buffer_size) < 0) {
-		perror("can't receive string from client");
+		debug_message("can't receive string from client");
 		exit(1);
 	}
 	string str(buffer);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 	socklen_t server_addr_len = sizeof server_addr;
 	int listener = socket(AF_INET , SOCK_STREAM , 0);
 	if (listener < 0) {
-		perror("can't create socket");
+		debug_message("can't create socket");
 		exit(1);
 	}
 	server_addr.sin_family = AF_INET;
@@ -74,16 +74,16 @@ int main(int argc, char *argv[]) {
 	server_addr.sin_port = htons(41716);
 	memset(server_addr.sin_zero, '\0', sizeof server_addr.sin_zero);
 	if (bind(listener, (struct sockaddr*) &server_addr, server_addr_len) < 0) {
-		perror("can't bind");
+		debug_message("can't bind");
 		exit(1);
 	}
 	if (listen(listener, 5) < 0) {
-		perror("can't listen");
+		debug_message("can't listen");
 		close(listener);
 		exit(1);
 	}
 	if (getsockname(listener, (struct sockaddr*) &server_addr, &server_addr_len) < 0) {
-		perror("can't get sockname");
+		debug_message("can't get sockname");
 		exit(1);
 	}
 

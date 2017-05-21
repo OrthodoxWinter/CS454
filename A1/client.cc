@@ -29,6 +29,8 @@ void read_inputs() {
 		cv.notify_one();
 	}
 
+	debug_message("GOT EOF");
+
 	{
 		lock_guard<mutex> lock(mutex);
 		terminate_client = true;
@@ -37,21 +39,22 @@ void read_inputs() {
 }
 
 void send_to_server(int sockfd, string input) {
+	debug_message("trying to send send " + input);
 	const char *cstr = input.c_str();
 	unsigned int len = strlen(cstr) + 1;
 	uint32_t len_data = htonl(len);
 	if (send_all(sockfd, (const char*) &len_data, sizeof len) < 0) {
-		perror("can't send string size");
+		debug_message("can't send string size");
 		exit(1);
 	}
 	if (send_all(sockfd, cstr, len) < 0) {
-		perror("can't send string");
+		debug_message("can't send string");
 		exit(1);
 	}
 	sleep(2);
 	char *response = new char[len];
 	if (recv_all(sockfd, response, len) < 0) {
-		perror("can't receive title case string");
+		debug_message("can't receive title case string");
 		exit(1);
 	}
 	cout << "Server: " << response << endl;
@@ -91,13 +94,13 @@ int main() {
 	getaddrinfo(hostname, port, &hints, &addr_info);
 	sockfd = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 	if (sockfd < 0) {
-		perror("error creating socket");
+		debug_message("error creating socket");
 		exit(1);
 	}
 
 	if (connect(sockfd, addr_info->ai_addr, addr_info->ai_addrlen) < 0) {
 		close(sockfd);
-		perror("error connecting");
+		debug_message("error connecting");
 		exit(2);
 	}
 

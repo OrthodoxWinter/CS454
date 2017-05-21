@@ -2,6 +2,8 @@
 #define __HELP_H__ true
 
 #include <sys/socket.h>
+#include <string>
+#include <iostream>
 
 int send_all(int socket, const char *buf, unsigned int len) {
     int sent = 0;
@@ -27,6 +29,12 @@ int recv_all(int socket, char *buf, unsigned int len) {
         received += n;
     }
     return n;
+}
+
+void debug_message(std::string str) {
+    #ifndef DEBUG
+    std::cout << str << std::endl;
+    #endif
 }
 
 #endif
