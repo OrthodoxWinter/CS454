@@ -52,7 +52,6 @@ void send_to_server(int sockfd, string input) {
 		debug_message("can't send string");
 		exit(1);
 	}
-	sleep(2);
 	char *response = new char[len];
 	if (recv_all(sockfd, response, len) < 0) {
 		debug_message("can't receive title case string");
@@ -60,6 +59,7 @@ void send_to_server(int sockfd, string input) {
 	}
 	cout << "Server: " << response << endl;
 	delete [] response;
+	sleep(2);
 }
 
 void send_request() {
