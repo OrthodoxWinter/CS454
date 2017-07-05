@@ -67,11 +67,13 @@ void registerServerFunction(string serverName, unsigned short port, string funct
 
 server_location getServerLocation(function_info &functionInfo) {
 	for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
-        server_location &server = (*it);
+        server_location server = (*it);
         list<function_info> &functions = serverFunctions.at(server);
         for (<list<function_info>::iterator j = functions.begin(); j != functions.end(); j++) {
         	function_info &serverFunctionInfo = *j;
-        	if (function_info == serverFunctionInfo) {
+        	if (functionInfo == serverFunctionInfo) {
+        		serversRoundRobin.erase(it);
+        		serversRoundRobin.push_back(server);
         		return server;
         	}
         }
@@ -99,6 +101,7 @@ void handleRegister(Sender &sender, char buffer[], unsigned int size) {
     extractIntArray(bufferPointer, argTypes, argTypesLength);
 
     registerServerFunction(serverName, port, sender.socket, functionName, argTypes, argTypesLength);
+    sender.sendRegisterSuccess(0);
 }
 
 void handleLoc(Sender &sender, char buffer[], unsigned int bufferSize) {
@@ -112,7 +115,12 @@ void handleLoc(Sender &sender, char buffer[], unsigned int bufferSize) {
     int argTypes[argTypesLength];
     function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength);
 
-    server_location location = getServerLocation(key);
+    try {
+    	server_location location = getServerLocation(key);
+    	sender.sendLocSuccess(location.name, location.port)
+    } catch (int e) {
+    	sender.sendLocFailure(e);
+    }
 }
 
 void handleTerminate() {
