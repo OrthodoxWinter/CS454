@@ -5,7 +5,7 @@
 
 char *insertShort(short s, char *buffer);
 char *insertInt(int i, char *buffer);
-char *insertString(std::string s, char *buffer);
+char *insertString(std::string s, char *buffer, unsigned int padding = 0);
 char *insertUnsignedInt(unsigned int u, char *buffer);
 char *insertChar(char c, char *buffer);
 char *insertDouble(double d, char *buffer);

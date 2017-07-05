@@ -15,11 +15,14 @@ char *insertInt(int i, char *buffer) {
 	return buffer + length;
 }
 
-char *insertString(string s, char *buffer) {
+char *insertString(string s, char *buffer, unsigned int padding) {
 	const char *cstr = s.c_str();
 	size_t length = s.length() + 1;
 	memcpy(buffer, cstr, length);
-	return buffer + length;
+	for (unsigned int i = 0; i < padding; i++) {
+		buffer[length + i] = '\0';
+	}
+	return buffer + length + padding;
 }
 
 char *insertUnsignedInt(unsigned int u, char *buffer) {

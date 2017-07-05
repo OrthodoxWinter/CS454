@@ -1,12 +1,12 @@
 struct server_location {
 	string name;
 	unsigned short port;
-}
+};
 
 struct function_info {
 	string name;
 	list<int> argTypes;
-}
+};
 
 bool operator ==(const function_info &l, const function_info &r) {
     if(l.name == r.name) {

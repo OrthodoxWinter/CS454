@@ -51,6 +51,16 @@ int recv_all(int socket, char *buf, unsigned int len) {
     return n;
 }
 
+unsigned int argTypesLength(int argTypes[]) {
+	unsigned int i = 0;
+	for (;;) {
+		if (argTypes[i] == 0) {
+			return i;
+		}
+	}
+	return 0;
+}
+
 void debug(std::string str) {
     #ifdef DEBUG
     std::cout << "DEBUG: " << str << std::endl;

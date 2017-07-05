@@ -33,7 +33,7 @@ function_info toFunctionInfo(string name, int[] argTypes, unsigned int argTypesL
 void registerServerFunction(string serverName, unsigned short port, int serverSocket, string functionName, int[] argTypes, unsigned int argTypesLength) {
     bool inQueue = false;
     for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
-        server_location server = (*it);
+        server_location &server = (*it);
         if (server.name == serverName && server.port == port) {
             inQueue = true;
             break;
@@ -50,9 +50,9 @@ void registerServerFunction(string serverName, unsigned short port, int serverSo
 
     function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength)
     if (serverFunctions.find(newServer) != serverFunctions.end()) {
-    	list<function_info> functions = serverFunctions.find(newServer)->second();
+    	list<function_info> &functions = serverFunctions.find(newServer)->second();
     	for (list<function_info>::iterator it = functions.begin(); it != function.end(); it++) {
-    		if (serverFunctionInfoEq(newFunction, *it)) {
+    		if (newFunction == *it) {
     			functions.erase(it);
     			break;
     		}
@@ -67,9 +67,16 @@ void registerServerFunction(string serverName, unsigned short port, int serverSo
 
 server_location getServerLocation(function_info &functionInfo) {
 	for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
-        server_location server = (*it);
-        
+        server_location &server = (*it);
+        list<function_info> &functions = serverFunctions.at(server);
+        for (<list<function_info>::iterator j = functions.begin(); j != functions.end(); j++) {
+        	function_info &serverFunctionInfo = *j;
+        	if (function_info == serverFunctionInfo) {
+        		return server;
+        	}
+        }
     }
+    throw 1;
 }
 
 void handleRegister(Sender &sender, char buffer[], unsigned int size, int serverSocket) {
@@ -105,9 +112,14 @@ void handleLocRequest(Sender &sender, char buffer[], unsigned int bufferSize) {
 
     unsigned int argTypesLength = (bufferSize - FUNCTION_NAME_SIZE) / 4;
     int argTypes[argTypesLength];
-    function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength)
+    function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength);
 
-    server_location location = getServerLocation(key);
+    try {
+    	server_location location = getServerLocation(key);
+    } catch (int e) {
+
+    }
 
     //TODO reply to client
 }
+
