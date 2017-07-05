@@ -61,7 +61,7 @@ unsigned int argTypesLength(int argTypes[]) {
 	return 0;
 }
 
-void debug(std::string str) {
+void debug_message(std::string str) {
     #ifdef DEBUG
     std::cout << "DEBUG: " << str << std::endl;
     #endif

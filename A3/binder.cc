@@ -1,4 +1,3 @@
-
 #include <string>
 #include <iostream>
 #include <cstdlib>
@@ -11,6 +10,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <queue>
+#include <set>
+#include <ctype.h>
 #include "buffer.h"
 #include "helpers.h"
 #include "binder.h"
@@ -19,7 +20,7 @@ using namespace std;
 
 int socket_fd = 0;
 list<server_location> serversRoundRobin;
-map<int, server_location> socketToServerName;
+set<int> serverSockets;
 map<server_location, list<function_info>> serverFunctions;
 
 function_info toFunctionInfo(string name, int[] argTypes, unsigned int argTypesLength) {
@@ -30,7 +31,7 @@ function_info toFunctionInfo(string name, int[] argTypes, unsigned int argTypesL
     }
 }
 
-void registerServerFunction(string serverName, unsigned short port, int serverSocket, string functionName, int[] argTypes, unsigned int argTypesLength) {
+void registerServerFunction(string serverName, unsigned short port, string functionName, int[] argTypes, unsigned int argTypesLength) {
     bool inQueue = false;
     for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
         server_location &server = (*it);
@@ -45,12 +46,11 @@ void registerServerFunction(string serverName, unsigned short port, int serverSo
     	newServer.name = serverName;
     	newServer.port = port;
         serversRoundRobin.push_front(newServer);
-        socketToServerName[serverSocket] = newServer;
     }
 
     function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength)
     if (serverFunctions.find(newServer) != serverFunctions.end()) {
-    	list<function_info> &functions = serverFunctions.find(newServer)->second();
+    	list<function_info> &functions = serverFunctions.find(newServer)->second;
     	for (list<function_info>::iterator it = functions.begin(); it != function.end(); it++) {
     		if (newFunction == *it) {
     			functions.erase(it);
@@ -79,7 +79,7 @@ server_location getServerLocation(function_info &functionInfo) {
     throw 1;
 }
 
-void handleRegister(Sender &sender, char buffer[], unsigned int size, int serverSocket) {
+void handleRegister(Sender &sender, char buffer[], unsigned int size) {
     unsigned short port;
     char * bufferPointer = buffer;
 
@@ -98,12 +98,10 @@ void handleRegister(Sender &sender, char buffer[], unsigned int size, int server
     int argTypes[argTypesLength];
     extractIntArray(bufferPointer, argTypes, argTypesLength);
 
-    registerServerFunction(serverName, port, serverSocket, functionName, argTypes, argTypesLength);
-
-    //TODO reply to server
+    registerServerFunction(serverName, port, sender.socket, functionName, argTypes, argTypesLength);
 }
 
-void handleLocRequest(Sender &sender, char buffer[], unsigned int bufferSize) {
+void handleLoc(Sender &sender, char buffer[], unsigned int bufferSize) {
     char * bufferPointer = buffer;
 
     char nameBuffer[FUNCTION_NAME_SIZE];
@@ -114,12 +112,132 @@ void handleLocRequest(Sender &sender, char buffer[], unsigned int bufferSize) {
     int argTypes[argTypesLength];
     function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength);
 
-    try {
-    	server_location location = getServerLocation(key);
-    } catch (int e) {
-
-    }
-
-    //TODO reply to client
+    server_location location = getServerLocation(key);
 }
 
+void handleTerminate() {
+    terminating = true;
+    for (map<int>::iterator it = serverSockets.begin(); it != serverSockets.end(); it++) {
+        Sender sender(*it);
+        sender.sendTerminate();
+    }
+}
+
+int processRequest(int clientSocket) {
+	Receiver receiver(clientSocket);
+	Sender sender(clientSocket);
+
+	unsigned int size;
+	unsigned int type;
+	int status = receiver.receiveUnsignedInt(size)
+	if (status < 0) {
+		debug_message("can't receive size from client");
+		exit(status);
+	} else if (statue == 0) {
+		return -1;
+	}
+	if (int e = receiver.receiveUnsignedInt(type) <= 0) {
+		debug_message("can't receive type from client");
+		exit(e);
+	}
+	if (type == TERIMNATE) {
+		handleTerminate();
+	} else {
+		char message[size];
+		if (int e = receiver.receiveMessage(size, message) <= 0) {
+			debug_message("can't receive message from client");
+			exit(e);
+		}
+		if (type == REGISTER) {
+			handleRegister(sender, message, size);
+		} else if (type == LOC_REQUEST) {
+			handleLoc(sender, message, size);
+		} else {
+			debug_message("unkown message type " + type);
+			exit(1);
+		}
+	}
+
+}
+
+int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
+	struct sockaddr_storage remoteaddr;
+	socklen_t addrlen = sizeof remoteaddr;
+	int new_client_socket = accept(socket, (struct sockaddr*) &remoteaddr, &addrlen);
+	if (new_client_socket < 0) {
+		debug_message("can't accept");
+		exit(1);
+	}
+	FD_SET(new_client_socket, master_fds);
+	all_sockets.insert(new_client_socket);
+	debug_message("got new socket " + to_string(new_client_socket));
+	return new_client_socket;
+}
+
+
+int main(int argc, char *argv[]) {
+	struct sockaddr_in server_addr;
+	socklen_t server_addr_len = sizeof server_addr;
+	int listener = socket(AF_INET , SOCK_STREAM , 0);
+	if (listener < 0) {
+		debug_message("can't create socket");
+		exit(1);
+	}
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+	server_addr.sin_port = htons(0);
+	memset(server_addr.sin_zero, '\0', sizeof server_addr.sin_zero);
+	if (bind(listener, (struct sockaddr*) &server_addr, server_addr_len) < 0) {
+		debug_message("can't bind");
+		exit(1);
+	}
+	if (listen(listener, 5) < 0) {
+		debug_message("can't listen");
+		close(listener);
+		exit(1);
+	}
+	if (getsockname(listener, (struct sockaddr*) &server_addr, &server_addr_len) < 0) {
+		debug_message("can't get sockname");
+		exit(1);
+	}
+
+	char hostname_buf[HOSTNAME_SIZE];
+	hostname_buf[HOSTNAME_SIZE - 1] = '\0';
+	gethostname(hostname_buf, HOSTNAME_SIZE - 1);
+	string hostname(hostname_buf);
+
+	cout << "SERVER_ADDRESS " << hostname << endl;
+	cout << "SERVER_PORT " << ntohs(server_addr.sin_port) << endl;
+
+	fd_set master_fds, read_fds;
+	int fdmax;
+	FD_SET(listener, &master_fds);
+	fdmax = listener;
+	set<int> all_sockets;
+	all_sockets.insert(listener);
+
+	for (;;) {
+		read_fds = master_fds;
+		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
+			exit(1);
+		}
+		for (int socket : all_sockets) {
+			if (FD_ISSET(socket, &read_fds)) {
+				if (socket == listener) {
+					int new_client_socket = accept_new_client(listener, &master_fds, all_sockets);
+					if (new_client_socket > fdmax) {
+						fdmax = new_client_socket;
+					}
+				} else {
+					if (processRequest(socket) == -1) {
+						debug_message("closing connection to client");
+						FD_CLR(socket, &master_fds);
+						all_sockets.erase(socket);
+						fdmax = *all_sockets.rbegin();
+						close(socket);
+					}
+				}
+			}
+		}
+	}
+}
