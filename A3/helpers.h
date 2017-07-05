@@ -7,6 +7,9 @@
 #include <string>
 #include <iostream>
 
+#define HOSTNAME_SIZE 1024
+#define FUNCTION_NAME_SIZE 64
+
 enum MessageType
 {
 	ERROR = 0,

@@ -18,6 +18,7 @@ char *insertFloatArray(float floatArray[], int length, char *buffer) ;
 char *insertShortArray(short shortArray[], int length, char *buffer);
 char *insertLongArray(long longArray[], int length, char *buffer);
 
+char *extractCharArray(char *buffer, char charArray[], unsigned int length);
 char *extractIntArray(char *buffer, int intArray[], unsigned int length);
 char *extractShortArray(char *buffer, short shortArray[], unsigned int length); 
 char *extractLongArray(char *buffer, long longArray[], unsigned int length); 
