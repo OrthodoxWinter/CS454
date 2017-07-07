@@ -83,6 +83,7 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 void handleRpcCall(int clientSocket, char *message) {
 	char *bufferHead = message;
 	Receiver receiver(clientSocket);
+	Sender sender(clientSocket);
 	char nameBuffer[FUNCTION_NAME_SIZE];
 	bufferHead = extractCharArray(bufferHead, nameBuffer, FUNCTION_NAME_SIZE);
 	string functionName(nameBuffer);
@@ -90,7 +91,26 @@ void handleRpcCall(int clientSocket, char *message) {
 	bufferHead = extractUnsignedInt(bufferHead, argTypesLength);
 	int argTypes[argTypesLength];
 	void *args[argTypesLength - 1];
-	bufferHead = extractIntArray(bufferHead, argTypes, argTypesLength);
+	skeleton f = NULL;
+	function_info requested = toFunctionInfo(functionName, argTypes);
+	for (map<function_info, skeleton>::iterator it = functions.begin(); it != functions.end(); it++) {
+		if (it->first == requested) {
+			f = it->second;
+		}
+	}
+	if (f == NULL) {
+		sender.sendExecuteFailure(FUNCTION_NOT_FOUND);
+	}
+	extractArguments(bufferHead, argTypes, argTypesLength, args, true);
+	int success = f(argTypes, args);
+	if (success < 0) {
+		sender.sendExecuteFailure(SERVER_EXECUTE_FAILED);
+	} else {
+		sender.sendExecuteSuccess(functionName, argTypes, args);
+	}
+	for (unsigned int i = 0; i < argTypesLength - 1; i++) {
+		delete[] args[i];
+	}
 }
 
 int processRequest(int socket bool &terminate) {

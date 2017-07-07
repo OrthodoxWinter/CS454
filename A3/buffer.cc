@@ -60,9 +60,16 @@ char *insertUnsignedShort(unsigned short s, char *buffer) {
 	return buffer + length;
 }
 
+char *insertCharArray(char *charArray, int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
+		buffer = insertChar(charArray[i], buffer);
+	}
+	return buffer;
+}
+
 char *insertIntArray(int *intArray, int length, char *buffer) {
 	for (unsigned int i = 0; i < length; i++) {
-		buffer = insertInt(intArray[i], bufferHead);
+		buffer = insertInt(intArray[i], buffer);
 	}
 	return buffer;
 }
@@ -93,6 +100,52 @@ char *insertLongArray(long *longArray, int length, char *buffer) {
 		buffer = insertLong(longArray[i], buffer);
 	}
 	return buffer;
+}
+
+char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
+	unsigned int argTypesLength = getArgTypesLength(argTypes);
+	buffer = insertString(name, buffer, FUNCTION_NAME_SIZE - (name.length() + 1));
+	buffer = insertIntArray(argTypes, argTypesLength, buffer);
+
+	for(unsigned int i = 0; i < argTypesLength - 1; i++) {
+		int argType = argTypes[i];
+
+		unsigned int length = getArrayLength(argType);
+		unsigned int size = length == 0 ? 1 : length;
+
+		int type = getType(argType);
+		void *arg = args[i];
+
+		switch(type) {
+			case ARG_CHAR:
+				buffer = insertCharArray((char *) arg, buffer);
+				break;
+
+			case ARG_SHORT:
+				buffer = insertShrotArray((short *) arg, buffer);
+				break;
+
+			case ARG_INT:
+				buffer = insertIntArray((int *) arg, buffer);
+				break;
+
+			case ARG_LONG:
+				buffer = insertLongArray((long *) arg, buffer);
+				break;
+
+			case ARG_DOUBLE:
+				buffer = insertDoubleArary((double *) arg, buffer);
+				break;
+
+			case ARG_FLOAT:
+				buffer = insertFloatArray((float *) arg, buffer);
+				break;
+
+			default:
+				return -1;
+		}
+	}
+	return 0;
 }
 
 char *extractIntArray(char *buffer, int *intArray, unsigned int length);
