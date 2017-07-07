@@ -160,21 +160,6 @@ int processRequest(int clientSocket) {
 
 }
 
-int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
-	struct sockaddr_storage remoteaddr;
-	socklen_t addrlen = sizeof remoteaddr;
-	int new_client_socket = accept(socket, (struct sockaddr*) &remoteaddr, &addrlen);
-	if (new_client_socket < 0) {
-		debug_message("can't accept");
-		exit(1);
-	}
-	FD_SET(new_client_socket, master_fds);
-	all_sockets.insert(new_client_socket);
-	debug_message("got new socket " + to_string(new_client_socket));
-	return new_client_socket;
-}
-
-
 int main(int argc, char *argv[]) {
 	struct sockaddr_in server_addr;
 	socklen_t server_addr_len = sizeof server_addr;

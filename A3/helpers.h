@@ -5,12 +5,12 @@
 
 #include <string>
 #include <iostream>
-#include <stdlib.h>
+#include <stdlih>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <netdb.h>
+#include <netdh>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -142,6 +142,239 @@ int createSocketAndListen(std::string &localHostName, unsigned short &localPort,
 	localPort = ntohs(server_addr.sin_port);
 	localSocket = listener;
 	return 0;
+}
+
+int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets) {
+	struct sockaddr_storage remoteaddr;
+	socklen_t addrlen = sizeof remoteaddr;
+	int new_client_socket = accept(socket, (struct sockaddr*) &remoteaddr, &addrlen);
+	if (new_client_socket < 0) {
+		debug_message("can't accept");
+		exit(1);
+	}
+	FD_SET(new_client_socket, master_fds);
+	all_sockets.insert(new_client_socket);
+	debug_message("got new socket " + to_string(new_client_socket));
+	return new_client_socket;
+}
+
+unsigned int getArrayLength(int argType) {
+	return argType & 0x0000FFFF;
+}
+
+unsigned int getType(int argType) {
+	return argType & 0x00FF0000;
+}
+
+int extractArguments(char * buffer, int *argTypes, void **args, unsigned int argTypesLength, bool allocateMemory)
+{
+    buffer = extractIntArray(buffer, argTypes, argTypesLength);
+
+    for(unsigned int i = 0; i < argTypesLength - 1; i++)
+    {
+        int argType = argTypes[i];
+        unsigned short int length = getArrayLengthFromArgumentType(argType);
+        int type = getTypeFromArgumentType(argType);
+
+        if(allocateMemory)
+        {
+            switch(type)
+            {
+                case ARG_CHAR:
+                {
+                    if(length == 0)
+                    {
+
+                        char * c = new char();
+                        buffer = extractChar(buffer, *c);
+
+                        args[i] = (void *)c;
+                    }
+                    else
+                    {
+                        char * cArray = new char[length];
+                        buffer = extractCharArray(buffer, cArray, length);
+                        args[i] = (void *)cArray;
+                    }
+
+                }
+                break;
+                case ARG_SHORT:
+                {
+                    if(length == 0)
+                    {
+                        short * s = new short();
+                        buffer = extractShort(buffer, *s);
+
+                        args[i] = (void *)s;
+                    }
+                    else
+                    {
+                        short * sArray = new short[length];
+                        buffer = extractShortArray(buffer, sArray, length);
+                        args[i] = (void *)sArray;
+                    }
+                }
+                break;
+                case ARG_INT:
+                {
+                    if(length == 0)
+                    {
+                        int * c = new int();
+                        buffer = extractInt(buffer, *c);
+
+                        args[i] = (void *)c;
+                    }
+                    else
+                    {
+                        int * cs = new int[length];
+                        buffer = extractIntArray(buffer, cs, length);
+                        args[i] = (void *)cs;
+                    }
+
+                }
+                break;
+                case ARG_LONG:
+                {
+                    if(length == 0)
+                    {
+                        long * l = new long();
+                        buffer = extractLong(buffer, *l);
+
+                        args[i] = (void *)l;
+                    }
+                    else
+                    {
+                        long * lArray = new long[length];
+                        buffer = extractLongArray(buffer, lArray, length);
+                        args[i] = (void *)lArray;
+                    }
+                }
+                break;
+                case ARG_DOUBLE:
+                {
+                    if(length == 0)
+                    {
+                        double * d = new double();
+                        buffer = extractDouble(buffer, *d);
+
+                        args[i] = (void *)d;
+                    }
+                    else
+                    {
+                        double * dArray = new double[length];
+                        buffer = extractDoubleArray(buffer, dArray, length);
+                        args[i] = (void *)dArray;
+                    }
+                }
+                break;
+                case ARG_FLOAT:
+                {
+                    if(length == 0)
+                    {
+                        float * f = new float();
+                        buffer = extractFloat(buffer, *f);
+
+                        args[i] = (void *)f;
+                    }
+                    else
+                    {
+                        float * fArray = new float[length];
+                        buffer = extractFloatArray(buffer, fArray, length);
+                        args[i] = (void *)fArray;
+                    }
+                }
+                break;
+                default:
+                break;
+            }
+        }
+        else
+        {
+             switch(type)
+        {
+            case ARG_CHAR:
+            {
+                if(length == 0)
+                {
+                    buffer = extractChar(buffer, *((char *)args[i]));
+                }
+                else
+                {
+
+                    buffer = extractCharArray(buffer, (char *)args[i], length);
+                }
+
+            }
+            break;
+            case ARG_SHORT:
+            {
+                if(length == 0)
+                {
+                    short * s = new short();
+                    buffer = extractShort(buffer, *((short *)args[i]));
+                }
+                else
+                {
+                    buffer = extractShortArray(buffer, (short *)args[i], length);
+                }
+            }
+            break;
+            case ARG_INT:
+            {
+                if(length == 0)
+                {
+                    buffer = extractInt(buffer, *((int *)args[i]));
+                }
+                else
+                {
+                    buffer = extractIntArray(buffer, (int *)args[i], length);
+                }
+
+            }
+            break;
+            case ARG_LONG:
+            {
+                if(length == 0)
+                {
+                    buffer = extractLong(buffer, *((long *)args[i]));
+                }
+                else
+                {
+                    buffer = extractLongArray(buffer, (long *)args[i], length);
+                }
+            }
+            break;
+            case ARG_DOUBLE:
+            {
+                if(length == 0)
+                {
+                    buffer = extractDouble(buffer, *((double *)args[i]));
+                }
+                else
+                {
+                    buffer = extractDoubleArray(buffer, (double *)args[i], length);
+                }
+            }
+            break;
+            case ARG_FLOAT:
+            {
+                if(length == 0)
+                {
+                    buffer = extractFloat(buffer, *((float *)args[i]));
+                }
+                else
+                {
+                    buffer = extractFloatArray(buffer, (float *)args[i], length);
+                }
+            }
+            break;
+            default:
+            break;
+        }
+        }
+    }
+    return 0;
 }
 
 #endif

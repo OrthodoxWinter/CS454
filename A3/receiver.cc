@@ -27,7 +27,7 @@ int Receiver::receiveUnsignedInt(int &i) {
     }
 }
 
-int Receiver::receiveMessage(unsigned int size, char message[]) {
+int Receiver::receiveMessage(unsigned int size, char *message) {
     int n = recv_all(socket, message, size)
     if (n == 0) {
         return SOCKET_CONNECTION_FALIURE;
