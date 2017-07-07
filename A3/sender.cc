@@ -7,6 +7,17 @@
 
 using namespace std;
 
+unsigned int Sender::executeMessageSize(int *argTypes, unsigned int argTypesLength) {
+	unsigned int total = 0;
+	for (unsigned int i = 0; i < argTypesLength - 1;  i++) {
+		int argType = argTypes[i];
+		unsigned int arrayLength = getArrayLength(argType);
+		arrayLength = arrayLength == 0 ? 1 : arrayLength;
+		total += arrayLength;
+	}
+	return FUNCTION_NAME_SIZE + 4 + argTypesLength * 4 + total;
+}
+
 int Sender::sendMessage(unsigned int size, unsigned int messageType, char *message) {
 	char buffer[size + 8];
 	char *bufferHead = buffer;
@@ -37,17 +48,11 @@ int Sender::sendRegister(string serverName, unsigned short port, string function
 }
 
 int Sender::sendRegisterSuccess(int reasonCode) {
-	char buffer[4];
-	insertIntToBuffer(reasonCode, buffer);
-
- 	return sendMessage(4, REGISTER_SUCCESS, buffer);
+	return sendIntMessage(reasonCode, REGISTER_SUCCESS);
 }
 
 int Sender::sendRegisterFailure(int reasonCode) {
-	char buffer[4];
-	insertIntToBuffer(reasonCode, buffer);
-
- 	return sendMessage(size, REGISTER_FAILURE, buffer);
+	return sendIntMessage(reasonCode, REGISTER_FAILURE);
 }
 
 int Sender::sendLocRequest(string functionName, int *argTypes) {
@@ -76,12 +81,34 @@ int Sender::sendLocSuccess(string serverName, unsigned short port) {
 }
 
 int Sender::sendLocFailure(int reasonCode) {
-	char buffer[4];
-	bufferHead = insertIntToBuffer(reasonCode, buffer);
-
- 	return sendMessage(size, LOC_FAILURE, buffer);
+	return sendIntMessage(reasonCode, LOC_FAILURE);
 }
 
 int Sender::sendTerminate() {
  	return sendMessage(0, TERMINATE, NULL);
+}
+
+int Sender::sendExecuteMessage(string name, int *argTypes, void **args, unsigned int type) {
+	unsigned int argTypesLength = getArgTypesLength(argTypes);
+	unsigned int size = executeMessageSize(argTypes, argTypesLength);
+	char buffer[size];
+	insertIntToBuffer(name, argTypes, args, buffer);
+	return sendMessage(size, type, buffer);
+}
+
+int Sender::sendExecute(string name, int *argTypes, void **args) {
+	sendExecuteMessage(name, argTypes, args, EXECUTE);
+}
+int Sender::sendExecuteSuccess(string name, int *argTypes, void **args) {
+	sendExecuteMessage(name, argTypes, args, EXECUTE_SUCCESS);
+}
+
+int Sender::sendExecuteFailure(int reasonCode) {
+	return sendIntMessage(reasonCode, EXECUTE_FAILURE);
+}
+
+int Sender::sendIntMessage(int i, unsigned int type) {
+	char buffer[4];
+	insertIntToBuffer(i, buffer);
+ 	return sendMessage(4, type, buffer);
 }

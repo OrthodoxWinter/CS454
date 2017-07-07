@@ -5,13 +5,15 @@ using namespace std;
 
 char *insertShort(short s, char *buffer) {
 	size_t length = sizeof s;
-	memcpy(buffer, (const char*) &s, length);
+	uint16_t n = htons(s);
+	memcpy(buffer, (const char*) &n, length);
 	return buffer + length;
 }
 
 char *insertInt(int i, char *buffer) {
 	size_t length = sizeof i;
-	memcpy(buffer, (const char*) &i, length);
+	uint32_t n = htonl(i);
+	memcpy(buffer, (const char*) &n, length);
 	return buffer + length;
 }
 
@@ -27,7 +29,8 @@ char *insertString(string s, char *buffer, unsigned int padding) {
 
 char *insertUnsignedInt(unsigned int u, char *buffer) {
 	size_t length = sizeof u;
-	memcpy(buffer, (const char*) &u, length);
+	uint32_t n = htonl(u);
+	memcpy(buffer, (const char*) &n, length);
 	return buffer + length;
 }
 
@@ -44,7 +47,8 @@ char *insertDouble(double d, char *buffer) {
 
 char *insertFloat(float f, char *buffer) {
 	size_t length = sizeof f;
-	memcpy(buffer, (const char*) &f, length);
+	uint32_t n = ntohl(f);
+	memcpy(buffer, (const char*) &n, length);
 	return buffer + length;
 }
 
@@ -56,7 +60,8 @@ char *insertLong(long l, char *buffer) {
 
 char *insertUnsignedShort(unsigned short s, char *buffer) {
 	size_t length = sizeof s;
-	memcpy(buffer, (const char*) &s, length);
+	uint16_t n = htons(s);
+	memcpy(buffer, (const char*) &n, length);
 	return buffer + length;
 }
 
@@ -105,6 +110,7 @@ char *insertLongArray(long *longArray, int length, char *buffer) {
 char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
 	unsigned int argTypesLength = getArgTypesLength(argTypes);
 	buffer = insertString(name, buffer, FUNCTION_NAME_SIZE - (name.length() + 1));
+	buffer = insertUnsignedInt(argTypesLength, buffer);
 	buffer = insertIntArray(argTypes, argTypesLength, buffer);
 
 	for(unsigned int i = 0; i < argTypesLength - 1; i++) {

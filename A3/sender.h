@@ -5,6 +5,10 @@
 #include <list>
 
 class Sender {
+  private:
+  	unsigned int executeMessageSize(int *argTypes, unsigned int argTypesLength);
+  	int sendExecuteMessage(string name, int *argTypes, void **args, unsigned int type);
+  	int sendIntMessage(int i, unsigned int type);
   public:
   	int socket;
 	Sender(int socket);

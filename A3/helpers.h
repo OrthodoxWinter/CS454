@@ -166,8 +166,7 @@ unsigned int getType(int argType) {
 	return argType & 0x00FF0000;
 }
 
-int extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool allocateMemory)
-{
+int extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool allocateMemory) {
 	buffer = extractIntArray(buffer, argTypes, argTypesLength);
 
 	for (unsigned int i = 0; i < argTypesLength - 1; i++) {

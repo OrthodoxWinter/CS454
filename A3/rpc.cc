@@ -91,13 +91,19 @@ void handleRpcCall(int clientSocket, char *message) {
 	bufferHead = extractUnsignedInt(bufferHead, argTypesLength);
 	int argTypes[argTypesLength];
 	void *args[argTypesLength - 1];
+
 	skeleton f = NULL;
 	function_info requested = toFunctionInfo(functionName, argTypes);
-	for (map<function_info, skeleton>::iterator it = functions.begin(); it != functions.end(); it++) {
-		if (it->first == requested) {
-			f = it->second;
+	{
+		lock_guard<mutex> lock(mutex);
+		for (map<function_info, skeleton>::iterator it = functions.begin(); it != functions.end(); it++) {
+			if (it->first == requested) {
+				f = it->second;
+				break;
+			}
 		}
 	}
+
 	if (f == NULL) {
 		sender.sendExecuteFailure(FUNCTION_NOT_FOUND);
 	}
