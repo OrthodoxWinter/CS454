@@ -60,47 +60,47 @@ char *insertUnsignedShort(unsigned short s, char *buffer) {
 	return buffer + length;
 }
 
-char *insertIntArray(int intArray[], int numInts, char *buffer) {
-	for (unsigned int i = 0; i < numInts; i++) {
+char *insertIntArray(int *intArray, int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertInt(intArray[i], bufferHead);
 	}
 	return buffer;
 }
 
-char *insertDoubleArray(double doubleArray[], unsigned int length, char *buffer) {
-	for (unsigned int i = 0; i < numInts; i++) {
+char *insertDoubleArray(double *doubleArray, unsigned int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertDouble(doubleArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *insertFloatArray(float floatArray[], unsigned int length, char *buffer) {
-	for (unsigned int i = 0; i < numInts; i++) {
+char *insertFloatArray(float *floatArray, unsigned int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertFloat(floatArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *insertShortArray(short shortArray[], int length, char *buffer) {
-	for (unsigned int i = 0; i < numInts; i++) {
+char *insertShortArray(short *shortArray, int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertShort(shortArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *insertLongArray(long longArray[], int length, char *buffer) {
-	for (unsigned int i = 0; i < numInts; i++) {
+char *insertLongArray(long *longArray, int length, char *buffer) {
+	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertLong(longArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *extractIntArray(char *buffer, int intArray[], unsigned int length);
-char *extractShortArray(char *buffer, short shortArray[], unsigned int length); 
-char *extractCharArray(char *buffer, char charArray[], unsigned int length); 
-char *extractLongArray(char *buffer, long longArray[], unsigned int length); 
-char *extractDoubleArray(char *buffer, double doubleArray[], unsigned int length); 
-char *extractFloatArray(char *buffer, float floatArray[], unsigned int length); 
+char *extractIntArray(char *buffer, int *intArray, unsigned int length);
+char *extractShortArray(char *buffer, short *shortArray, unsigned int length); 
+char *extractCharArray(char *buffer, char *charArray, unsigned int length); 
+char *extractLongArray(char *buffer, long *longArray, unsigned int length); 
+char *extractDoubleArray(char *buffer, double *doubleArray, unsigned int length); 
+char *extractFloatArray(char *buffer, float *floatArray, unsigned int length); 
 char *extractUnsignedInt(char *buffer, unsigned int &i);
 char *extractInt(char *buffer, int &i);
 char *extractShort(char *buffer, short &i);

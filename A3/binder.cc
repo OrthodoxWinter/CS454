@@ -14,7 +14,7 @@
 #include <ctype.h>
 #include "buffer.h"
 #include "helpers.h"
-#include "binder.h"
+#include "structs.h"
 
 using namespace std;
 
@@ -23,15 +23,7 @@ list<server_location> serversRoundRobin;
 set<int> serverSockets;
 map<server_location, list<function_info>> serverFunctions;
 
-function_info toFunctionInfo(string name, int[] argTypes, unsigned int argTypesLength) {
-	function_info newFunction;
-    newFunction.name = name;
-    for (unsigned int i = 0; i < argTypesLength; i++) {
-    	newFunction.argTypes.push_back(argTypes[i]);
-    }
-}
-
-void registerServerFunction(string serverName, unsigned short port, string functionName, int[] argTypes, unsigned int argTypesLength) {
+void registerServerFunction(string serverName, unsigned short port, string functionName, int *argTypes) {
     bool inQueue = false;
     for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
         server_location &server = (*it);
@@ -48,7 +40,7 @@ void registerServerFunction(string serverName, unsigned short port, string funct
         serversRoundRobin.push_front(newServer);
     }
 
-    function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength)
+    function_info newFunction = toFunctionInfo(functionName, argTypes)
     if (serverFunctions.find(newServer) != serverFunctions.end()) {
     	list<function_info> &functions = serverFunctions.find(newServer)->second;
     	for (list<function_info>::iterator it = functions.begin(); it != function.end(); it++) {
@@ -81,7 +73,7 @@ server_location getServerLocation(function_info &functionInfo) {
     throw 1;
 }
 
-void handleRegister(Sender &sender, char buffer[], unsigned int size) {
+void handleRegister(Sender &sender, char *buffer, unsigned int size) {
     unsigned short port;
     char * bufferPointer = buffer;
 
@@ -95,16 +87,16 @@ void handleRegister(Sender &sender, char buffer[], unsigned int size) {
     bufferPointer = extractCharArray(bufferPointer, functionNameBuffer);
     string functionName = string(functionNameBuffer);
 
-    unsigned int argTypesLength = (bufferSize - HOSTNAME_SIZE - portSize - FUNCTION_NAME_SIZE) / 4;
+    unsigned int argTypesLength = (bufferSize - HOSTNAME_SIZE - PORT_SIZE - FUNCTION_NAME_SIZE) / 4;
 
     int argTypes[argTypesLength];
     extractIntArray(bufferPointer, argTypes, argTypesLength);
 
-    registerServerFunction(serverName, port, sender.socket, functionName, argTypes, argTypesLength);
+    registerServerFunction(serverName, port, sender.socket, functionName, argTypes);
     sender.sendRegisterSuccess(0);
 }
 
-void handleLoc(Sender &sender, char buffer[], unsigned int bufferSize) {
+void handleLoc(Sender &sender, char *buffer, unsigned int bufferSize) {
     char * bufferPointer = buffer;
 
     char nameBuffer[FUNCTION_NAME_SIZE];
@@ -141,7 +133,7 @@ int processRequest(int clientSocket) {
 	if (status < 0) {
 		debug_message("can't receive size from client");
 		exit(status);
-	} else if (statue == 0) {
+	} else if (status == 0) {
 		return -1;
 	}
 	if (int e = receiver.receiveUnsignedInt(type) <= 0) {

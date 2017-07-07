@@ -68,11 +68,11 @@ int recv_all(int socket, char *buf, unsigned int len) {
     return n;
 }
 
-unsigned int argTypesLength(int argTypes[]) {
+unsigned int getArgTypesLength(int *argTypes) {
 	unsigned int i = 0;
 	for (;;) {
 		if (argTypes[i] == 0) {
-			return i;
+			return i + 1;
 		}
 	}
 	return 0;
@@ -84,7 +84,7 @@ void debug_message(std::string str) {
     #endif
 }
 
-int createSocketAndConnect(const char *hostname, const char *port, int &socket) {
+int createSocketAndConnect(const char *hostname, const char *port, int &newSocket) {
 	struct addrinfo hints, *addr_info;
 	memset(&hints, 0, sizeof hints);
 
@@ -92,7 +92,7 @@ int createSocketAndConnect(const char *hostname, const char *port, int &socket) 
 	hints.ai_socktype = SOCK_STREAM;
 
 	getaddrinfo(hostname, port, &hints, &addr_info);
-	socket = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
+	int socket = socket(addr_info->ai_family, addr_info->ai_socktype, addr_info->ai_protocol);
 	if (socket < 0) {
 		debug_message("error creating socket");
 		return SOCKET_CREATE_FAIL;
@@ -103,10 +103,11 @@ int createSocketAndConnect(const char *hostname, const char *port, int &socket) 
 		debug_message("error connecting");
 		return SOCKET_CONNECT_FAIL;
 	}
+	newSocket = socket;
 	return 0;
 }
 
-int createSocketAndListen(std::string &localHostName, unsigned short &localPort) {
+int createSocketAndListen(std::string &localHostName, unsigned short &localPort, int &localSocket) {
 	struct sockaddr_in server_addr;
 	socklen_t server_addr_len = sizeof server_addr;
 	int listener = socket(AF_INET , SOCK_STREAM , 0);
@@ -139,6 +140,7 @@ int createSocketAndListen(std::string &localHostName, unsigned short &localPort)
 
 	localHostName = hostname;
 	localPort = ntohs(server_addr.sin_port);
+	localSocket = listener;
 	return 0;
 }
 
