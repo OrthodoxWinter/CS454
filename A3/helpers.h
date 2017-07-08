@@ -39,7 +39,9 @@ enum ReasonCode {
 	TERMINATE_NOT_FROM_BINDER = -12,
 	NO_FUNCTIONS_REGISTERED = -13,
 	SOCKET_RECEIVE_FAIL = -14,
-	RPC_ALREADY_INIT = -15
+	RPC_ALREADY_INIT = -15,
+	FUNCTION_NOT_FOUND = -16,
+	SERVER_EXECUTE_FAILED = -17
 };
 
 int send_all(int socket, const char *buf, unsigned int len);

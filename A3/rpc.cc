@@ -5,9 +5,16 @@
 #include <vector>
 #include <list>
 #include <utility>
+#include <assert.h>
+#include <unistd.h>
+#include <utility>
+#include "helpers.h"
 #include "rpc.h"
-#include "binder.h"
 #include "structs.h"
+#include "sender.h"
+#include "receiver.h"
+#include "buffer.h"
+#include "helpers.h"
 
 using namespace std;
 
@@ -37,12 +44,12 @@ int rpcInit() {
 	}
 
     status = createSocketAndListen(localHostname, localPort, listeningSocket);
-	if (statue < 0)  {
+	if (status < 0)  {
 		return status;
 	}
 
 	status = createSocketAndConnect(binderAddress, binderPort, binderSocket);
-	if (statue < 0)  {
+	if (status < 0)  {
 		return status;
 	}
 	
@@ -55,13 +62,12 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 	}
 	Receiver binderReceiver(binderSocket);
 	Sender binderSender(binderSocket);
-	unsigned int argTypesLength = getArgTypesLength(argTypes);
 	string functionName(name);
 	int status = binderSender.sendRegister(localHostname, localPort, functionName, argTypes);
 	if (status < 0) {
 		debug_message("can't send register request");
 		return SOCKET_SEND_FAILED;
-	} else if (statue == 0) {
+	} else if (status == 0) {
 		debug_message("binder socket closed while registering");
 		return SOCKET_CLOSED;
 	}
@@ -72,7 +78,7 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 	binderReceiver.receiveUnsignedInt(messageType);
 	if (messageType == REGISTER_SUCCESS) {
 		function_info functionInfo = toFunctionInfo(functionName, argTypes);
-		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); i++) {
+		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); it++) {
 			if (it->first == functionInfo) {
 				functions.erase(it);
 				break;
@@ -126,12 +132,13 @@ void handleRpcCall(int clientSocket, char *message) {
 	} else {
 		sender.sendExecuteSuccess(functionName, argTypes, args);
 	}
+	delete[] message;
 	for (unsigned int i = 0; i < argTypesLength - 1; i++) {
-		delete[] args[i];
+		delete[] (char *) args[i];
 	}
 }
 
-int processRequest(int socket bool &terminate) {
+int processRequest(int socket, bool &terminate) {
 	Receiver receiver(socket);
 	unsigned int size;
 	if (receiver.receiveUnsignedInt(size) == 0) {
@@ -151,10 +158,10 @@ int processRequest(int socket bool &terminate) {
 			debug_message("unexpected message");
 			return UNEXPECTED_MESSAGE;
 		}
-		char message = new char[size];
+		char *message = new char[size];
 		receiver.receiveMessage(size, message);
 		thread rpcCall(handleRpcCall, socket, message);
-		runningThreads.push_back(rpcCall);
+		runningThreads.push_back(move(rpcCall));
 		return 0;
 	}
 }
@@ -171,7 +178,7 @@ int rpcExecute() {
 	set<int> all_sockets;
 	all_sockets.insert(listeningSocket);
 	all_sockets.insert(binderSocket);
-	boolean terminate = false;
+	bool terminate = false;
 	while (!terminate) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
@@ -185,7 +192,7 @@ int rpcExecute() {
 						fdmax = new_client_socket;
 					}
 				} else {
-					int status = processClientRequest(socket, terminate)
+					int status = processRequest(socket, terminate);
 					if (status == SOCKET_CLOSED) {
 						debug_message("closing connection to client");
 						FD_CLR(socket, &master_fds);
@@ -205,8 +212,7 @@ int rpcExecute() {
 	}
 
 	for (unsigned int i = 0; i < runningThreads.size(); i++) {
-		thread t = runningThreads[i];
-		t.join();
+		runningThreads.at(i).join();
 	}
 	close(binderSocket);
 	close(listeningSocket);

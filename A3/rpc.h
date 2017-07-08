@@ -21,10 +21,10 @@ extern "C" {
 typedef int (*skeleton)(int *, void **);
 
 extern int rpcInit();
-extern int rpcCall(const char *name, int *argTypes, void **args);
+//extern int rpcCall(const char *name, int *argTypes, void **args);
 extern int rpcRegister(const char *name, int *argTypes, skeleton f);
 extern int rpcExecute();
-extern int rpcTerminate();
+//extern int rpcTerminate();
 
 #ifdef __cplusplus
 }
