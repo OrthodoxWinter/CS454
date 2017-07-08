@@ -120,7 +120,6 @@ void handleRpcCall(int clientSocket, char *message) {
 }
 
 int processRequest(int socket bool &terminate) {
-	terminate = false;
 	Receiver receiver(socket);
 	unsigned int size;
 	receiver.receiveUnsignedInt(size);
@@ -157,8 +156,8 @@ int rpcExecute() {
 	set<int> all_sockets;
 	all_sockets.insert(listeningSocket);
 	all_sockets.insert(binderSocket);
-
-	for (;;) {
+	boolean terminate = false;
+	while (!terminate) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
 			exit(1);
@@ -171,10 +170,18 @@ int rpcExecute() {
 						fdmax = new_client_socket;
 					}
 				} else {
-					boolean terminate;
 					processClientRequest(socket, terminate);
+					if (terminate) {
+						break;
+					}
 				}
 			}
 		}
 	}
+
+	for (unsigned int i = 0; i < runningThreads.size(); i++) {
+		thread t = runningThreads[i];
+		t.join();
+	}
+	return 0;
 }

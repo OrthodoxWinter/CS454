@@ -15,7 +15,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define HOSTNAME_SIZE 1024
+#define HOSTNAME_SIZE 64
 #define FUNCTION_NAME_SIZE 64
 
 enum MessageType {
