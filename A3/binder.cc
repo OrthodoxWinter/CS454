@@ -146,6 +146,7 @@ int processRequest(int clientSocket, bool &terminate) {
 	if (type == TERMINATE) {
 		handleTerminate();
 		terminate = true;
+		return 0;
 	} else {
 		char message[size];
 		if (int e = receiver.receiveMessage(size, message) <= 0) {
@@ -154,14 +155,16 @@ int processRequest(int clientSocket, bool &terminate) {
 		}
 		if (type == REGISTER) {
 			handleRegister(sender, message, size);
+			return 0;
 		} else if (type == LOC_REQUEST) {
 			handleLoc(sender, message, size);
+			return 0;
 		} else {
 			debug_message("unkown message type " + type);
 			exit(1);
 		}
 	}
-
+	return -1;
 }
 
 int main(int argc, char *argv[]) {

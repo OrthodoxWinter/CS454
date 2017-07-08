@@ -14,12 +14,12 @@ char *insertDouble(double d, char *buffer);
 char *insertFloat(float f, char *buffer);
 char *insertLong(long l, char *buffer);
 char *insertUnsignedShort(unsigned short us, char *buffer);
-char *insertCharArray(char *charArray, int length, char *buffer);
-char *insertIntArray(int *intArray, int length, char *buffer);
-char *insertDoubleArray(double *doubleArray, int length, char *buffer);
-char *insertFloatArray(float *floatArray, int length, char *buffer) ;
-char *insertShortArray(short *shortArray, int length, char *buffer);
-char *insertLongArray(long *longArray, int length, char *buffer);
+char *insertCharArray(char *charArray, unsigned int length, char *buffer);
+char *insertIntArray(int *intArray, unsigned int length, char *buffer);
+char *insertDoubleArray(double *doubleArray, unsigned int length, char *buffer);
+char *insertFloatArray(float *floatArray, unsigned int length, char *buffer) ;
+char *insertShortArray(short *shortArray, unsigned int length, char *buffer);
+char *insertLongArray(long *longArray, unsigned int length, char *buffer);
 char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer);
 
 char *extractCharArray(char *buffer, char *charArray, unsigned int length);

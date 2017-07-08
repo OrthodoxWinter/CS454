@@ -18,7 +18,7 @@
 using namespace std;
 
 bool isLittleEndian() {
-	return htonl(47) != 47
+	return htonl(47) != 47;
 }
 
 void swap8(void * v) {
@@ -110,14 +110,14 @@ char *insertUnsignedShort(unsigned short s, char *buffer) {
 	return buffer + length;
 }
 
-char *insertCharArray(char *charArray, int length, char *buffer) {
+char *insertCharArray(char *charArray, unsigned int length, char *buffer) {
 	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertChar(charArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *insertIntArray(int *intArray, int length, char *buffer) {
+char *insertIntArray(int *intArray, unsigned int length, char *buffer) {
 	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertInt(intArray[i], buffer);
 	}
@@ -138,14 +138,14 @@ char *insertFloatArray(float *floatArray, unsigned int length, char *buffer) {
 	return buffer;
 }
 
-char *insertShortArray(short *shortArray, int length, char *buffer) {
+char *insertShortArray(short *shortArray, unsigned int length, char *buffer) {
 	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertShort(shortArray[i], buffer);
 	}
 	return buffer;
 }
 
-char *insertLongArray(long *longArray, int length, char *buffer) {
+char *insertLongArray(long *longArray, unsigned int length, char *buffer) {
 	for (unsigned int i = 0; i < length; i++) {
 		buffer = insertLong(longArray[i], buffer);
 	}

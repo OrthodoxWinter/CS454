@@ -97,10 +97,10 @@ int Sender::sendExecuteMessage(string name, int *argTypes, void **args, unsigned
 }
 
 int Sender::sendExecute(string name, int *argTypes, void **args) {
-	sendExecuteMessage(name, argTypes, args, EXECUTE);
+	return sendExecuteMessage(name, argTypes, args, EXECUTE);
 }
 int Sender::sendExecuteSuccess(string name, int *argTypes, void **args) {
-	sendExecuteMessage(name, argTypes, args, EXECUTE_SUCCESS);
+	return sendExecuteMessage(name, argTypes, args, EXECUTE_SUCCESS);
 }
 
 int Sender::sendExecuteFailure(int reasonCode) {
