@@ -31,7 +31,7 @@ enum ReasonCode {
 	SOCKET_LISTEN_FAIL = -4,
 	GET_SOCKNAME_FAIL = -5,
 	NO_BINDER_ADDRESS_ENV = -6,
-	NO_UNSET_BINDER_PORT_ENV = -7,
+	NO_BINDER_PORT_ENV = -7,
 	RPC_NOT_INIT = -8,
 	SOCKET_SEND_FAILED = -9,
 	SOCKET_CLOSED = -10,
@@ -61,5 +61,7 @@ int accept_new_client(int socket, fd_set *master_fds, set<int> &all_sockets);
 unsigned int getArrayLength(int argType);
 
 unsigned int getType(int argType);
+
+bool isOutput(int argType);
 
 #endif

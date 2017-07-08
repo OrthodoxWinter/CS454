@@ -36,6 +36,6 @@ char *extractLong(char *buffer, long &l);
 char *extractFloat(char *buffer, float &f);
 char *extractDouble(char *buffer, double &d);
 char *extractChar(char *buffer, char &c);
-char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool allocateMemory);
+char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool copy);
 
 #endif

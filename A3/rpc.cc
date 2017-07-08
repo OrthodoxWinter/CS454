@@ -27,28 +27,38 @@ vector<thread> runningThreads;
 
 mutex mtx;
 
-int rpcInit() {
+int connectToBinder() {
 	if (binderSocket != -1) {
-		return RPC_ALREADY_INIT;
+		return 0;
 	}
-	int status;
-	const char *binderAddress = getenv("BINDER_ADDRESS");
-    const char *binderPort = getenv("BINDER_PORT");
 
-    if (binderAddress == NULL) {
+	const char *binderAddress = getenv("BINDER_ADDRESS");
+	const char *binderPort = getenv("BINDER_PORT");
+
+	if (binderAddress == NULL) {
 		return NO_BINDER_ADDRESS_ENV;
 	}
 
-    if (binderPort == NULL) {
-		return NO_UNSET_BINDER_PORT_ENV;
+	if (binderPort == NULL) {
+		return NO_BINDER_PORT_ENV;
 	}
 
-    status = createSocketAndListen(localHostname, localPort, listeningSocket);
-	if (status < 0)  {
+	return createSocketAndConnect(binderAddress, binderPort, binderSocket);
+}
+
+int rpcInit() {
+	if (binderSocket != -1 && listeningSocket != -1) {
+		return RPC_ALREADY_INIT;
+	}
+
+	int status;
+	
+	status = connectToBinder();
+	if (status < 0) {
 		return status;
 	}
 
-	status = createSocketAndConnect(binderAddress, binderPort, binderSocket);
+	status = createSocketAndListen(localHostname, localPort, listeningSocket);
 	if (status < 0)  {
 		return status;
 	}
@@ -221,4 +231,119 @@ int rpcExecute() {
 	localHostname = "";
 	localPort = 0;
 	return 0;
+}
+
+int clientExecute(int socket, string name, int *argTypes, void **args) {
+	Sender sender(socket);
+	Receiver receiver(socket);
+
+	int status;
+
+	unsigned int argTypesLength = getArgTypesLength(argTypes);
+
+	status = sender.sendExecute(name, argTypes, args);
+
+	if (status < 0) {
+		return SOCKET_SEND_FAILED;
+	}
+	if (status == 0) {
+		return SOCKET_CLOSED;
+	}
+
+	unsigned int size;
+	unsigned int type;
+	status = receiver.receiveUnsignedInt(size);
+	if (status < 0) {
+		return SOCKET_RECEIVE_FAIL;
+	}
+	status = receiver.receiveUnsignedInt(type);
+	if (status < 0) {
+		return SOCKET_RECEIVE_FAIL;
+	}
+
+	char returnedMessage[size];
+	receiver.receiveMessage(size, returnedMessage);
+	switch(type) {
+		case EXECUTE_SUCCESS: {
+			char *bufferHead = returnedMessage;
+			unsigned int returnedArgTypesLength;
+			char nameBuffer[FUNCTION_NAME_SIZE];
+			bufferHead = extractCharArray(bufferHead, nameBuffer, FUNCTION_NAME_SIZE);
+			string returnName(nameBuffer);
+			assert(returnName.compare(name) == 0);
+			bufferHead = extractUnsignedInt(bufferHead, returnedArgTypesLength);
+			assert(argTypesLength == returnedArgTypesLength);
+
+			int returnedArgTypes[argTypesLength];
+			extractArguments(bufferHead, returnedArgTypes, argTypesLength, args, false);
+			return 0;
+		}
+		break;
+
+		case EXECUTE_FAILURE: {
+			int returnCode;
+			assert(size == 4);
+			extractInt(returnedMessage, returnCode);
+			return returnCode;
+		}
+		break;
+
+		default:
+		debug_message("received known message type from server while request execute from client: " + to_string(type));
+		exit(1);
+		break;
+	}
+	return -1;
+}
+
+int rpcCall(const char *name, int *argTypes, void **args) {
+	string functionName(name);
+	int status;
+	connectToBinder();
+	Sender binderSender(binderSocket);
+	Receiver binderReceiver(binderSocket);
+	status = binderSender.sendLoc(functionName, argTypes);
+	if (status < 0) {
+		return SOCKET_SEND_FAILED;
+	}
+
+	unsigned int size;
+	unsigned int type;
+	status = binderReceiver.receiveUnsignedInt(size);
+	status = binderReceiver.receiveUnsignedInt(type);
+	if (type == LOC_SUCCESS) {
+		assert(size == HOSTNAME_SIZE + PORT_SIZE);
+		char buffer[size];
+		char *bufferHead = buffer;
+		binderReceiver.receiveMessage(size, bufferHead);
+		char nameBuffer[HOSTNAME_SIZE];
+		bufferHead = extractCharArray(bufferHead, nameBuffer, HOSTNAME_SIZE);
+		string serverName(nameBuffer);
+		unsigned short port;
+		extractUnsignedShort(bufferHead, port);
+		int serverSocket;
+		status = createSocketAndConnect(serverName.c_str(), to_string(port).c_str(), serverSocket);
+		if (status < 0) return status;
+		return clientExecute(serverSocket, functionName, argTypes, args);
+	} else {
+		assert(size == 4);
+		int reasonCode;
+		binderReceiver.receiveInt(reasonCode);
+		return reasonCode;
+	}
+}
+
+int rpcTerminate() {
+    int status;
+
+    if (binderSocket < 0) {
+        status = connectToBinder();
+    }
+
+    if (status == 0) {
+        Sender sender(binderSocket);
+        status = sender.sendTerminate();
+    }
+
+    return status;
 }

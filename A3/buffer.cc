@@ -308,7 +308,7 @@ char *extractChar(char *buffer, char &c) {
 	return buffer + 1;
 }
 
-char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool allocateMemory) {
+char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool copy) {
 	buffer = extractIntArray(buffer, argTypes, argTypesLength);
 
 	for (unsigned int i = 0; i < argTypesLength - 1; i++) {
@@ -316,7 +316,8 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 		unsigned int arrayLength = getArrayLength(argType);
 		unsigned int type = getType(argType);
 		unsigned int size = arrayLength == 0 ? 1 : arrayLength;
-		if (allocateMemory) {
+		bool output = isOutput(argType);
+		if (copy) {
 			switch(type) {
 				case ARG_CHAR: {
 					char *n = new char[size];
@@ -359,29 +360,47 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 			}
 		}
 		switch(type) {
-			case ARG_CHAR:
-				buffer = extractCharArray(buffer, (char *) args[i], arrayLength);
-				break;
+			case ARG_CHAR: {
+				if (copy || output) {
+					buffer = extractCharArray(buffer, (char *) args[i], arrayLength);
+				}
+			}
+			break;
 
-			case ARG_SHORT:
-				buffer = extractShortArray(buffer, (short *) args[i], arrayLength);
-				break;
+			case ARG_SHORT: {
+				if (copy || output) {
+					buffer = extractShortArray(buffer, (short *) args[i], arrayLength);
+				}
+			}
+			break;
 
-			case ARG_INT:
-				buffer = extractIntArray(buffer, (int *) args[i], arrayLength);
-				break;
+			case ARG_INT: {
+				if (copy || output) {
+					buffer = extractIntArray(buffer, (int *) args[i], arrayLength);
+				}
+			}
+			break;
 
-			case ARG_LONG:
-				buffer = extractLongArray(buffer, (long *) args[i], arrayLength);
-				break;
+			case ARG_LONG: {
+				if (copy || output) {
+					buffer = extractLongArray(buffer, (long *) args[i], arrayLength);
+				}
+			}
+			break;
 
-			case ARG_DOUBLE:
-				buffer = extractDoubleArray(buffer, (double *) args[i], arrayLength);
-				break;
+			case ARG_DOUBLE: {
+				if (copy || output) {
+					buffer = extractDoubleArray(buffer, (double *) args[i], arrayLength);
+				}
+			}
+			break;
 
-			case ARG_FLOAT:
-				buffer = extractFloatArray(buffer, (float *) args[i], arrayLength);
-				break;
+			case ARG_FLOAT: {
+				if (copy || output) {
+					buffer = extractFloatArray(buffer, (float *) args[i], arrayLength);
+				}
+			}
+			break;
 
 			default:
 				exit(1);

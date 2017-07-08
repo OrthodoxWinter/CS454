@@ -136,3 +136,7 @@ unsigned int getArrayLength(int argType) {
 unsigned int getType(int argType) {
 	return argType & 0x00FF0000;
 }
+
+bool isOutput(int argType) {
+	return (argType & 1 << ARG_OUTPUT) != 0;
+}

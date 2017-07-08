@@ -8,7 +8,6 @@ using namespace std;
 
 class Sender {
   private:
-  	unsigned int executeMessageSize(int *argTypes, unsigned int argTypesLength);
   	int sendExecuteMessage(string name, int *argTypes, void **args, unsigned int type);
   	int sendIntMessage(int i, unsigned int type);
   public:
@@ -29,6 +28,9 @@ class Sender {
 	int sendExecuteFailure(int reasonCode);
 
 	int sendTerminate();
+
+  	unsigned int executeMessageSize(int *argTypes, unsigned int argTypesLength);
+
 };
 
 #endif
