@@ -3,6 +3,8 @@
 #include <mutex>
 #include <map>
 #include <vector>
+#include <list>
+#include <utility>
 #include "rpc.h"
 #include "binder.h"
 #include "structs.h"
@@ -13,12 +15,15 @@ int binderSocket = -1;
 int listeningSocket = -1;
 string localHostname = "";
 unsigned short localPort = 0;
-map<function_info, skeleton> functions;
+list<pair<function_info, skeleton>> functions;
 vector<thread> runningThreads;
 
 mutex mtx;
 
 int rpcInit() {
+	if (binderSocket != -1) {
+		return RPC_ALREADY_INIT;
+	}
 	int status;
 	const char *binderAddress = getenv("BINDER_ADDRESS");
     const char *binderPort = getenv("BINDER_PORT");
@@ -67,10 +72,17 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 	binderReceiver.receiveUnsignedInt(messageType);
 	if (messageType == REGISTER_SUCCESS) {
 		function_info functionInfo = toFunctionInfo(functionName, argTypes);
-		functions[functionInfo] = f;
+		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); i++) {
+			if (it->first == functionInfo) {
+				functions.erase(it);
+				break;
+			}
+		}
+		pair<function_info, skeleton> newPair(functionInfo, f);
+		functions.push_back(newPair);
 		return 0;
 	} else if (messageType == REGISTER_FAILURE) {
-		assert(size == 12);
+		assert(size == 4);
 		int reasonCode;
 		binderReceiver.receiveInt(reasonCode);
 		return reasonCode;
@@ -96,7 +108,7 @@ void handleRpcCall(int clientSocket, char *message) {
 	function_info requested = toFunctionInfo(functionName, argTypes);
 	{
 		lock_guard<mutex> lock(mutex);
-		for (map<function_info, skeleton>::iterator it = functions.begin(); it != functions.end(); it++) {
+		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); it++) {
 			if (it->first == requested) {
 				f = it->second;
 				break;
@@ -122,7 +134,9 @@ void handleRpcCall(int clientSocket, char *message) {
 int processRequest(int socket bool &terminate) {
 	Receiver receiver(socket);
 	unsigned int size;
-	receiver.receiveUnsignedInt(size);
+	if (receiver.receiveUnsignedInt(size) == 0) {
+		return SOCKET_CLOSED;
+	}
 	unsigned int messageType;
 	receiver.receiveUnsignedInt(messageType);
 	if (messageType == TERMINATE) {
@@ -141,6 +155,7 @@ int processRequest(int socket bool &terminate) {
 		receiver.receiveMessage(size, message);
 		thread rpcCall(handleRpcCall, socket, message);
 		runningThreads.push_back(rpcCall);
+		return 0;
 	}
 }
 
@@ -170,7 +185,17 @@ int rpcExecute() {
 						fdmax = new_client_socket;
 					}
 				} else {
-					processClientRequest(socket, terminate);
+					int status = processClientRequest(socket, terminate)
+					if (status == SOCKET_CLOSED) {
+						debug_message("closing connection to client");
+						FD_CLR(socket, &master_fds);
+						all_sockets.erase(all_sockets.find(socket));
+						fdmax = *all_sockets.rbegin();
+						close(socket);
+					} else if (status < 0) {
+						debug_message("rpc execute failed with status " + to_string(status));
+						return status;
+					}
 					if (terminate) {
 						break;
 					}
@@ -183,5 +208,11 @@ int rpcExecute() {
 		thread t = runningThreads[i];
 		t.join();
 	}
+	close(binderSocket);
+	close(listeningSocket);
+	binderSocket = -1;
+	listeningSocket = -1;
+	localHostname = "";
+	localPort = 0;
 	return 0;
 }

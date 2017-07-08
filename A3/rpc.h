@@ -29,4 +29,3 @@ extern int rpcTerminate();
 #ifdef __cplusplus
 }
 #endif
-

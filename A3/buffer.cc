@@ -18,11 +18,7 @@
 using namespace std;
 
 bool isLittleEndian() {
-	float f = 1.0;
-	assert(sizeof f == 4);
-	unsigned int *m = reinterpret_cast<unsigned int *> (&f);
-	unsigned int n = *m & 0xFFFF0000;
-	return n == 0;
+	return htonl(47) != 47
 }
 
 void swap8(void * v) {

@@ -38,7 +38,8 @@ enum ReasonCode {
 	UNEXPECTED_MESSAGE = -11,
 	TERMINATE_NOT_FROM_BINDER = -12,
 	NO_FUNCTIONS_REGISTERED = -13,
-	SOCKET_RECEIVE_FAIL = -14
+	SOCKET_RECEIVE_FAIL = -14,
+	RPC_ALREADY_INIT = -15
 };
 
 int send_all(int socket, const char *buf, unsigned int len);
