@@ -11,10 +11,14 @@
 #include <netdb.h>
 #include <queue>
 #include <set>
+#include <list>
+#include <map>
 #include <ctype.h>
 #include "buffer.h"
 #include "helpers.h"
 #include "structs.h"
+#include "sender.h"
+#include "receiver.h"
 
 using namespace std;
 
@@ -25,7 +29,7 @@ map<server_location, list<function_info>> serverFunctions;
 
 void registerServerFunction(string serverName, unsigned short port, string functionName, int *argTypes) {
     bool inQueue = false;
-    for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
+    for (list<server_location>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
         server_location &server = (*it);
         if (server.name == serverName && server.port == port) {
             inQueue = true;
@@ -33,17 +37,17 @@ void registerServerFunction(string serverName, unsigned short port, string funct
         }
     }
 
-    if (!inQueue) {
-    	server_location newServer;
-    	newServer.name = serverName;
-    	newServer.port = port;
+    server_location newServer;
+	newServer.name = serverName;
+	newServer.port = port;
+    if (!inQueue) {    	
         serversRoundRobin.push_front(newServer);
     }
 
-    function_info newFunction = toFunctionInfo(functionName, argTypes)
+    function_info newFunction = toFunctionInfo(functionName, argTypes);
     if (serverFunctions.find(newServer) != serverFunctions.end()) {
     	list<function_info> &functions = serverFunctions.find(newServer)->second;
-    	for (list<function_info>::iterator it = functions.begin(); it != function.end(); it++) {
+    	for (list<function_info>::iterator it = functions.begin(); it != functions.end(); it++) {
     		if (newFunction == *it) {
     			functions.erase(it);
     			break;
@@ -58,10 +62,10 @@ void registerServerFunction(string serverName, unsigned short port, string funct
 }
 
 server_location getServerLocation(function_info &functionInfo) {
-	for (list<server_location*>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
+	for (list<server_location>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
         server_location server = (*it);
         list<function_info> &functions = serverFunctions.at(server);
-        for (<list<function_info>::iterator j = functions.begin(); j != functions.end(); j++) {
+        for (list<function_info>::iterator j = functions.begin(); j != functions.end(); j++) {
         	function_info &serverFunctionInfo = *j;
         	if (functionInfo == serverFunctionInfo) {
         		serversRoundRobin.erase(it);
@@ -73,7 +77,7 @@ server_location getServerLocation(function_info &functionInfo) {
     throw 1;
 }
 
-void handleRegister(Sender &sender, char *buffer, unsigned int size) {
+void handleRegister(Sender &sender, char *buffer, unsigned int bufferSize) {
     unsigned short port;
     char * bufferPointer = buffer;
 
@@ -84,7 +88,7 @@ void handleRegister(Sender &sender, char *buffer, unsigned int size) {
     bufferPointer = extractUnsignedShort(bufferPointer, port);
 
     char functionNameBuffer[FUNCTION_NAME_SIZE];
-    bufferPointer = extractCharArray(bufferPointer, functionNameBuffer);
+    bufferPointer = extractCharArray(bufferPointer, functionNameBuffer, FUNCTION_NAME_SIZE);
     string functionName = string(functionNameBuffer);
 
     unsigned int argTypesLength = (bufferSize - HOSTNAME_SIZE - PORT_SIZE - FUNCTION_NAME_SIZE) / 4;
@@ -92,7 +96,7 @@ void handleRegister(Sender &sender, char *buffer, unsigned int size) {
     int argTypes[argTypesLength];
     extractIntArray(bufferPointer, argTypes, argTypesLength);
 
-    registerServerFunction(serverName, port, sender.socket, functionName, argTypes);
+    registerServerFunction(serverName, port, functionName, argTypes);
     sender.sendRegisterSuccess(0);
 }
 
@@ -101,35 +105,34 @@ void handleLoc(Sender &sender, char *buffer, unsigned int bufferSize) {
 
     char nameBuffer[FUNCTION_NAME_SIZE];
     bufferPointer = extractCharArray(bufferPointer, nameBuffer, FUNCTION_NAME_SIZE);
-    string name(nameBuffer);
+    string functionName(nameBuffer);
 
     unsigned int argTypesLength = (bufferSize - FUNCTION_NAME_SIZE) / 4;
     int argTypes[argTypesLength];
-    function_info newFunction = toFunctionInfo(functionName, argTypes, argTypesLength);
+    function_info newFunction = toFunctionInfo(functionName, argTypes);
 
     try {
-    	server_location location = getServerLocation(key);
-    	sender.sendLocSuccess(location.name, location.port)
+    	server_location location = getServerLocation(newFunction);
+    	sender.sendLocSuccess(location.name, location.port);
     } catch (int e) {
     	sender.sendLocFailure(e);
     }
 }
 
 void handleTerminate() {
-    terminating = true;
-    for (map<int>::iterator it = serverSockets.begin(); it != serverSockets.end(); it++) {
+    for (set<int>::iterator it = serverSockets.begin(); it != serverSockets.end(); it++) {
         Sender sender(*it);
         sender.sendTerminate();
     }
 }
 
-int processRequest(int clientSocket) {
+int processRequest(int clientSocket, bool &terminate) {
 	Receiver receiver(clientSocket);
 	Sender sender(clientSocket);
 
 	unsigned int size;
 	unsigned int type;
-	int status = receiver.receiveUnsignedInt(size)
+	int status = receiver.receiveUnsignedInt(size);
 	if (status < 0) {
 		debug_message("can't receive size from client");
 		exit(status);
@@ -140,8 +143,9 @@ int processRequest(int clientSocket) {
 		debug_message("can't receive type from client");
 		exit(e);
 	}
-	if (type == TERIMNATE) {
+	if (type == TERMINATE) {
 		handleTerminate();
+		terminate = true;
 	} else {
 		char message[size];
 		if (int e = receiver.receiveMessage(size, message) <= 0) {
@@ -201,7 +205,8 @@ int main(int argc, char *argv[]) {
 	set<int> all_sockets;
 	all_sockets.insert(listener);
 
-	for (;;) {
+	bool terminate = false;
+	while (!terminate) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
 			exit(1);
@@ -214,12 +219,15 @@ int main(int argc, char *argv[]) {
 						fdmax = new_client_socket;
 					}
 				} else {
-					if (processRequest(socket) == -1) {
+					if (processRequest(socket, terminate) == -1) {
 						debug_message("closing connection to client");
 						FD_CLR(socket, &master_fds);
 						all_sockets.erase(socket);
 						fdmax = *all_sockets.rbegin();
 						close(socket);
+					}
+					if (terminate) {
+						break;
 					}
 				}
 			}

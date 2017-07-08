@@ -3,9 +3,11 @@
 
 #include <string>
 
+using namespace std;
+
 char *insertShort(short s, char *buffer);
 char *insertInt(int i, char *buffer);
-char *insertString(std::string s, char *buffer, unsigned int padding = 0);
+char *insertString(string s, char *buffer, unsigned int padding = 0);
 char *insertUnsignedInt(unsigned int u, char *buffer);
 char *insertChar(char c, char *buffer);
 char *insertDouble(double d, char *buffer);
@@ -34,5 +36,6 @@ char *extractLong(char *buffer, long &l);
 char *extractFloat(char *buffer, float &f);
 char *extractDouble(char *buffer, double &d);
 char *extractChar(char *buffer, char &c);
+char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool allocateMemory);
 
 #endif

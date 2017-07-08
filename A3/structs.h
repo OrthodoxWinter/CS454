@@ -5,19 +5,30 @@
 #include <string>
 #include "helpers.h"
 
+using namespace std;
+
 struct server_location {
-	std::string name;
+	string name;
 	unsigned short port;
 };
 
 struct function_info {
-	std::string name;
-	std::vector<int> argTypes;
+	string name;
+	vector<int> argTypes;
 };
+
+bool operator <(const server_location &l, const server_location &r) {
+    int order = l.name.compare(r.name);
+    if (order == 0) {
+        return l.port < r.port;
+    } else {
+        return order < 0;
+    }
+}
 
 bool operator ==(const function_info &l, const function_info &r) {
     if(l.name == r.name) {
-        if (l.argTypes.size() != r.argTypes) {
+        if (l.argTypes.size() != r.argTypes.size()) {
         	return false;
         }
 
@@ -38,7 +49,7 @@ bool operator ==(const function_info &l, const function_info &r) {
     }
 }
 
-function_info toFunctionInfo(std::string name, int *argTypes) {
+function_info toFunctionInfo(string name, int *argTypes) {
     unsigned int argTypesLength = getArgTypesLength(argTypes);
     function_info newFunction;
     newFunction.name = name;

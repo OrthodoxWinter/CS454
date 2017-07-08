@@ -39,10 +39,10 @@ int Sender::sendRegister(string serverName, unsigned short port, string function
  	char buffer[size];
  	char *bufferHead = buffer;
 
- 	bufferHead = insertStringToBuffer(serverID, bufferHead, HOSTNAME_SIZE - (serverName.length() + 1));
- 	bufferHead = insertUnsignedShortToBuffer(port, bufferHead);
- 	bufferHead = insertStringToBuffer(name, bufferHead, FUNCTION_NAME_SIZE - (serverName.length() + 1));
- 	bufferHead = insertIntArrayToBuffer(argTypes, argTypesLength, bufferHead);
+ 	bufferHead = insertString(serverName, bufferHead, HOSTNAME_SIZE - (serverName.length() + 1));
+ 	bufferHead = insertUnsignedShort(port, bufferHead);
+ 	bufferHead = insertString(functionName, bufferHead, FUNCTION_NAME_SIZE - (serverName.length() + 1));
+ 	bufferHead = insertIntArray(argTypes, argTypesLength, bufferHead);
 
  	return sendMessage(size, REGISTER, buffer);
 }
@@ -55,15 +55,15 @@ int Sender::sendRegisterFailure(int reasonCode) {
 	return sendIntMessage(reasonCode, REGISTER_FAILURE);
 }
 
-int Sender::sendLocRequest(string functionName, int *argTypes) {
-	unsigned int argTypesLength = argTypesLength(argTypes);
+int Sender::sendLoc(string functionName, int *argTypes) {
+	unsigned int argTypesLength = getArgTypesLength(argTypes);
 
 	unsigned int size = FUNCTION_NAME_SIZE + argTypesLength * 4;
 	char buffer[size];
 	char *bufferHead = buffer;
 	
-	bufferHead = insertStringToBuffer(name, bufferHead, FUNCTION_NAME_SIZE - (functionName.length() + 1));
- 	bufferHead = insertIntArrayToBuffer(argTypes, argTypesLength, bufferHead);
+	bufferHead = insertString(functionName, bufferHead, FUNCTION_NAME_SIZE - (functionName.length() + 1));
+ 	bufferHead = insertIntArray(argTypes, argTypesLength, bufferHead);
 
  	return sendMessage(size, LOC_REQUEST, buffer);
 }
@@ -73,8 +73,8 @@ int Sender::sendLocSuccess(string serverName, unsigned short port) {
 	char buffer[size];
 	char *bufferHead = buffer;
 	
-	bufferHead = insertStringToBuffer(serverName, bufferHead, FUNCTION_NAME_SIZE - (functionName.length() + 1));
- 	bufferHead = insertUnsignedShortToBuffer(port, bufferHead);
+	bufferHead = insertString(serverName, bufferHead, HOSTNAME_SIZE - (serverName.length() + 1));
+ 	bufferHead = insertUnsignedShort(port, bufferHead);
 
  	return sendMessage(size, LOC_SUCCESS, buffer);
 
@@ -92,7 +92,7 @@ int Sender::sendExecuteMessage(string name, int *argTypes, void **args, unsigned
 	unsigned int argTypesLength = getArgTypesLength(argTypes);
 	unsigned int size = executeMessageSize(argTypes, argTypesLength);
 	char buffer[size];
-	insertIntToBuffer(name, argTypes, args, buffer);
+	insertIntoBuffer(name, argTypes, args, buffer);
 	return sendMessage(size, type, buffer);
 }
 
@@ -109,6 +109,6 @@ int Sender::sendExecuteFailure(int reasonCode) {
 
 int Sender::sendIntMessage(int i, unsigned int type) {
 	char buffer[4];
-	insertIntToBuffer(i, buffer);
+	insertInt(i, buffer);
  	return sendMessage(4, type, buffer);
 }

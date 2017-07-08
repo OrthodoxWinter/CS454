@@ -17,7 +17,7 @@ int Receiver::receiveUnsignedInt(unsigned int &i) {
     else return -1;
 }
 
-int Receiver::receiveUnsignedInt(int &i) {
+int Receiver::receiveInt(int &i) {
     char buffer[4];
     if (receiveMessage(4, buffer) == 4) {
         extractInt(buffer, i);
@@ -28,11 +28,11 @@ int Receiver::receiveUnsignedInt(int &i) {
 }
 
 int Receiver::receiveMessage(unsigned int size, char *message) {
-    int n = recv_all(socket, message, size)
+    int n = recv_all(socket, message, size);
     if (n == 0) {
-        return SOCKET_CONNECTION_FALIURE;
+        return SOCKET_CONNECT_FAIL;
     } else if (n < 0) {
-        return SOCKET_RECEIVE_FAILURE;
+        return SOCKET_RECEIVE_FAIL;
     } else {
         return n;
     }
