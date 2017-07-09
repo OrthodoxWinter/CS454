@@ -127,6 +127,7 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 }
 
 void handleRpcCall(int clientSocket, char *message) {
+	debug_message("handling rpc call");
 	char *bufferHead = message;
 	Receiver receiver(clientSocket);
 	Sender sender(clientSocket);
@@ -136,10 +137,15 @@ void handleRpcCall(int clientSocket, char *message) {
 	unsigned int argTypesLength;
 	bufferHead = extractUnsignedInt(bufferHead, argTypesLength);
 	int argTypes[argTypesLength];
+	bufferHead = extractIntArray(bufferHead, argTypes, argTypesLength);
+
+	function_info requested = toFunctionInfo(functionName, argTypes);
+	debug_message("got function " + to_string(requested));
+	debug_message("extracting arguments");
 	void *args[argTypesLength - 1];
+	extractArguments(bufferHead, argTypes, argTypesLength, args, true);
 
 	skeleton f = NULL;
-	function_info requested = toFunctionInfo(functionName, argTypes);
 	{
 		lock_guard<mutex> lock(mutex);
 		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); it++) {
@@ -153,7 +159,6 @@ void handleRpcCall(int clientSocket, char *message) {
 	if (f == NULL) {
 		sender.sendExecuteFailure(FUNCTION_NOT_FOUND);
 	}
-	extractArguments(bufferHead, argTypes, argTypesLength, args, true);
 	int success = f(argTypes, args);
 	if (success < 0) {
 		sender.sendExecuteFailure(SERVER_EXECUTE_FAILED);
@@ -261,12 +266,16 @@ int rpcExecute() {
 }
 
 int clientExecute(int socket, string name, int *argTypes, void **args) {
+
+	debug_message("client execute for function " + name);
 	Sender sender(socket);
 	Receiver receiver(socket);
 
 	int status;
 
 	unsigned int argTypesLength = getArgTypesLength(argTypes);
+
+	debug_message("sending execute");
 
 	status = sender.sendExecute(name, argTypes, args);
 
@@ -293,6 +302,7 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 	close(socket);
 	switch(type) {
 		case EXECUTE_SUCCESS: {
+			debug_message("execute success");
 			char *bufferHead = returnedMessage;
 			unsigned int returnedArgTypesLength;
 			char nameBuffer[FUNCTION_NAME_SIZE];
@@ -303,6 +313,7 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 			assert(argTypesLength == returnedArgTypesLength);
 
 			int returnedArgTypes[argTypesLength];
+			bufferHead = extractIntArray(bufferHead, returnedArgTypes, argTypesLength);
 			extractArguments(bufferHead, returnedArgTypes, argTypesLength, args, false);
 			return 0;
 		}
@@ -363,8 +374,7 @@ int rpcCall(const char *name, int *argTypes, void **args) {
 		status = createSocketAndConnect(serverName.c_str(), to_string(port).c_str(), serverSocket);
 		if (status < 0) return status;
 		debug_message("loc returned " + serverName + " " + to_string(port));
-		//status = clientExecute(serverSocket, functionName, argTypes, args);
-		status = 0;
+		status = clientExecute(serverSocket, functionName, argTypes, args);
 		close(serverSocket);
 		return status;
 	} else {

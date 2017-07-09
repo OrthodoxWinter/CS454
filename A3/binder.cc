@@ -27,14 +27,6 @@ list<server_location> serversRoundRobin;
 set<int> serverSockets;
 map<server_location, list<function_info>> serverFunctions;
 
-string to_string(function_info &info) {
-	string str = "name: " + info.name + " args:";
-	for (unsigned int i = 0; i < info.argTypes.size(); i++) {
-		str += " " + to_string(info.argTypes[i]);
-	}
-	return str;
-}
-
 void registerServerFunction(string serverName, unsigned short port, string functionName, int *argTypes) {
     bool inQueue = false;
     for (list<server_location>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {

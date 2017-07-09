@@ -153,6 +153,7 @@ char *insertLongArray(long *longArray, unsigned int length, char *buffer) {
 }
 
 char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
+	debug_message("calling insertIntoBuffer");
 	unsigned int argTypesLength = getArgTypesLength(argTypes);
 	buffer = insertString(name, buffer, FUNCTION_NAME_SIZE - (name.length() + 1));
 	buffer = insertUnsignedInt(argTypesLength, buffer);
@@ -161,11 +162,13 @@ char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
 	for(unsigned int i = 0; i < argTypesLength - 1; i++) {
 		int argType = argTypes[i];
 
-		unsigned int length = getArrayLength(argType);
-		length = length == 0 ? 1 : length;
+		unsigned int arrayLength = getArrayLength(argType);
+		unsigned int length = arrayLength == 0 ? 1 : arrayLength;
 
 		int type = getType(argType);
 		void *arg = args[i];
+
+		debug_message("insert argType " + to_string(argType) + " of length " + to_string(length));
 
 		switch(type) {
 			case ARG_CHAR:
@@ -193,6 +196,7 @@ char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
 				break;
 
 			default:
+				debug_message("unknown type " + to_string(type));
 				exit(1);
 		}
 	}
@@ -309,13 +313,12 @@ char *extractChar(char *buffer, char &c) {
 }
 
 char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength, void **args, bool copy) {
-	buffer = extractIntArray(buffer, argTypes, argTypesLength);
-
 	for (unsigned int i = 0; i < argTypesLength - 1; i++) {
 		int argType = argTypes[i];
 		unsigned int arrayLength = getArrayLength(argType);
 		unsigned int type = getType(argType);
 		unsigned int size = arrayLength == 0 ? 1 : arrayLength;
+		debug_message("extracting argument for argType " + to_string(argType) + " with size " + to_string(size));
 		bool output = isOutput(argType);
 		if (copy) {
 			switch(type) {
@@ -356,53 +359,67 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				break;
 
 				default:
+					debug_message("unknown type while extracting arguments " + to_string(type));
 					exit(1);
 			}
 		}
 		switch(type) {
 			case ARG_CHAR: {
 				if (copy || output) {
-					buffer = extractCharArray(buffer, (char *) args[i], arrayLength);
+					buffer = extractCharArray(buffer, (char *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(char);
 				}
 			}
 			break;
 
 			case ARG_SHORT: {
 				if (copy || output) {
-					buffer = extractShortArray(buffer, (short *) args[i], arrayLength);
+					buffer = extractShortArray(buffer, (short *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(short);
 				}
 			}
 			break;
 
 			case ARG_INT: {
 				if (copy || output) {
-					buffer = extractIntArray(buffer, (int *) args[i], arrayLength);
+					buffer = extractIntArray(buffer, (int *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(int);
 				}
 			}
 			break;
 
 			case ARG_LONG: {
 				if (copy || output) {
-					buffer = extractLongArray(buffer, (long *) args[i], arrayLength);
+					buffer = extractLongArray(buffer, (long *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(long);
 				}
 			}
 			break;
 
 			case ARG_DOUBLE: {
 				if (copy || output) {
-					buffer = extractDoubleArray(buffer, (double *) args[i], arrayLength);
+					buffer = extractDoubleArray(buffer, (double *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(double);
 				}
 			}
 			break;
 
 			case ARG_FLOAT: {
 				if (copy || output) {
-					buffer = extractFloatArray(buffer, (float *) args[i], arrayLength);
+					buffer = extractFloatArray(buffer, (float *) args[i], size);
+				} else {
+					buffer = buffer + size * sizeof(float);
 				}
 			}
 			break;
 
 			default:
+				debug_message("unknown argType " + to_string(type));
 				exit(1);
 		}
 	}

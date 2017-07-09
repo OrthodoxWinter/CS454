@@ -17,6 +17,14 @@ struct function_info {
 	vector<int> argTypes;
 };
 
+string to_string(function_info &info) {
+    string str = "name: " + info.name + " args:";
+    for (unsigned int i = 0; i < info.argTypes.size(); i++) {
+        str += " " + to_string(info.argTypes[i]);
+    }
+    return str;
+}
+
 bool operator <(const server_location &l, const server_location &r) {
     int order = l.name.compare(r.name);
     if (order == 0) {
