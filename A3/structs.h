@@ -27,7 +27,7 @@ bool operator <(const server_location &l, const server_location &r) {
 }
 
 bool operator ==(const function_info &l, const function_info &r) {
-    if(l.name == r.name) {
+    if (l.name == r.name) {
         if (l.argTypes.size() != r.argTypes.size()) {
         	return false;
         }

@@ -13,6 +13,8 @@
 #include "rpc.h"
 #include "helpers.h"
 
+#define DEBUG 1;
+
 int send_all(int socket, const char *buf, unsigned int len) {
 	unsigned int sent = 0;
 	int n;
@@ -45,6 +47,7 @@ unsigned int getArgTypesLength(int *argTypes) {
 		if (argTypes[i] == 0) {
 			return i + 1;
 		}
+		i++;
 	}
 	return 0;
 }

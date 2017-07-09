@@ -33,17 +33,23 @@ int Sender::sendMessage(unsigned int size, unsigned int messageType, char *messa
 Sender::Sender(int socket) : socket(socket) {}
 
 int Sender::sendRegister(string serverName, unsigned short port, string functionName, int *argTypes) {
+	debug_message("sendRegister with parameters: " + serverName + " " + to_string(port) + " " + functionName);
 	unsigned int argTypesLength = getArgTypesLength(argTypes);
 
  	unsigned int size = HOSTNAME_SIZE + PORT_SIZE + FUNCTION_NAME_SIZE + argTypesLength * 4;
  	char buffer[size];
  	char *bufferHead = buffer;
 
+ 	debug_message("insert server name to buffer");
  	bufferHead = insertString(serverName, bufferHead, HOSTNAME_SIZE - (serverName.length() + 1));
+ 	debug_message("insert port to buffer");
  	bufferHead = insertUnsignedShort(port, bufferHead);
- 	bufferHead = insertString(functionName, bufferHead, FUNCTION_NAME_SIZE - (serverName.length() + 1));
+ 	debug_message("insert function name to buffer");
+ 	bufferHead = insertString(functionName, bufferHead, FUNCTION_NAME_SIZE - (functionName.length() + 1));
+ 	debug_message("insert argTypes to buffer");
  	bufferHead = insertIntArray(argTypes, argTypesLength, bufferHead);
 
+ 	debug_message("sending message of size " + to_string(size));
  	return sendMessage(size, REGISTER, buffer);
 }
 
@@ -77,7 +83,6 @@ int Sender::sendLocSuccess(string serverName, unsigned short port) {
  	bufferHead = insertUnsignedShort(port, bufferHead);
 
  	return sendMessage(size, LOC_SUCCESS, buffer);
-
 }
 
 int Sender::sendLocFailure(int reasonCode) {
@@ -85,7 +90,7 @@ int Sender::sendLocFailure(int reasonCode) {
 }
 
 int Sender::sendTerminate() {
- 	return sendMessage(0, TERMINATE, NULL);
+ 	return sendIntMessage(0, TERMINATE);
 }
 
 int Sender::sendExecuteMessage(string name, int *argTypes, void **args, unsigned int type) {

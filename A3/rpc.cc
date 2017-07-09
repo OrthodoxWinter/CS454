@@ -27,11 +27,21 @@ vector<thread> runningThreads;
 
 mutex mtx;
 
+string argTypesToString(int *argTypes) {
+	unsigned int argTypesLength = getArgTypesLength(argTypes);
+	string str = "argTypes:";
+	for (unsigned int i = 0; i < argTypesLength; i++) {
+		str += " " + to_string(argTypes[i]);
+	}
+	return str;
+}
+
 int connectToBinder() {
 	if (binderSocket != -1) {
 		return 0;
 	}
 
+	/*
 	const char *binderAddress = getenv("BINDER_ADDRESS");
 	const char *binderPort = getenv("BINDER_PORT");
 
@@ -42,8 +52,9 @@ int connectToBinder() {
 	if (binderPort == NULL) {
 		return NO_BINDER_PORT_ENV;
 	}
+	*/
 
-	return createSocketAndConnect(binderAddress, binderPort, binderSocket);
+	return createSocketAndConnect("ubuntu", "34611", binderSocket);
 }
 
 int rpcInit() {
@@ -62,17 +73,21 @@ int rpcInit() {
 	if (status < 0)  {
 		return status;
 	}
-	
+	debug_message("completed RPC init");
 	return 0;
 }
 
 int rpcRegister(const char *name, int *argTypes, skeleton f) {
+	debug_message("RPC register");
 	if (localHostname == "" || localPort == 0 || listeningSocket == -1 || binderSocket == -1) {
+		debug_message("RPC init not called");
 		return RPC_NOT_INIT;
 	}
+	debug_message("binder socket is " + to_string(binderSocket));
 	Receiver binderReceiver(binderSocket);
 	Sender binderSender(binderSocket);
 	string functionName(name);
+	debug_message("sending RPC register request to binder");
 	int status = binderSender.sendRegister(localHostname, localPort, functionName, argTypes);
 	if (status < 0) {
 		debug_message("can't send register request");
@@ -81,12 +96,17 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 		debug_message("binder socket closed while registering");
 		return SOCKET_CLOSED;
 	}
+	debug_message("send RPC register request successful");
 
 	unsigned int size;
 	unsigned int messageType;
 	binderReceiver.receiveUnsignedInt(size);
 	binderReceiver.receiveUnsignedInt(messageType);
+	assert(size == 4);
+	int reasonCode;
+	binderReceiver.receiveInt(reasonCode);
 	if (messageType == REGISTER_SUCCESS) {
+		debug_message("got REGISTER_SUCCESS");
 		function_info functionInfo = toFunctionInfo(functionName, argTypes);
 		for (list<pair<function_info, skeleton>>::iterator it = functions.begin(); it != functions.end(); it++) {
 			if (it->first == functionInfo) {
@@ -98,9 +118,7 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 		functions.push_back(newPair);
 		return 0;
 	} else if (messageType == REGISTER_FAILURE) {
-		assert(size == 4);
-		int reasonCode;
-		binderReceiver.receiveInt(reasonCode);
+		debug_message("got REGISTER_FAILURE");
 		return reasonCode;
 	} else {
 		debug_message("unexpected message type while registering");
@@ -151,11 +169,20 @@ void handleRpcCall(int clientSocket, char *message) {
 int processRequest(int socket, bool &terminate) {
 	Receiver receiver(socket);
 	unsigned int size;
-	if (receiver.receiveUnsignedInt(size) == 0) {
+	int status;
+	status = receiver.receiveUnsignedInt(size);
+	if (status == 0) {
 		return SOCKET_CLOSED;
+	} else if (status < 0) {
+		debug_message("receive size failed while processing request for rpc execute");
+		exit(1);
 	}
 	unsigned int messageType;
-	receiver.receiveUnsignedInt(messageType);
+	status = receiver.receiveUnsignedInt(messageType);
+	if (status < 0) {
+		debug_message("receive type failed while processing request for rpc execute");
+		exit(1);
+	}
 	if (messageType == TERMINATE) {
 		if (socket == binderSocket) {
 			terminate = true;
@@ -165,7 +192,7 @@ int processRequest(int socket, bool &terminate) {
 		}
 	} else {
 		if (messageType != EXECUTE) {
-			debug_message("unexpected message");
+			debug_message("unexpected message " + to_string(messageType));
 			return UNEXPECTED_MESSAGE;
 		}
 		char *message = new char[size];
@@ -206,7 +233,7 @@ int rpcExecute() {
 					if (status == SOCKET_CLOSED) {
 						debug_message("closing connection to client");
 						FD_CLR(socket, &master_fds);
-						all_sockets.erase(all_sockets.find(socket));
+						all_sockets.erase(socket);
 						fdmax = *all_sockets.rbegin();
 						close(socket);
 					} else if (status < 0) {
@@ -263,6 +290,7 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 
 	char returnedMessage[size];
 	receiver.receiveMessage(size, returnedMessage);
+	close(socket);
 	switch(type) {
 		case EXECUTE_SUCCESS: {
 			char *bufferHead = returnedMessage;
@@ -297,7 +325,9 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 }
 
 int rpcCall(const char *name, int *argTypes, void **args) {
+	debug_message("rpc call");
 	string functionName(name);
+	debug_message("name: " + functionName + " " + argTypesToString(argTypes));
 	int status;
 	connectToBinder();
 	Sender binderSender(binderSocket);
@@ -310,7 +340,15 @@ int rpcCall(const char *name, int *argTypes, void **args) {
 	unsigned int size;
 	unsigned int type;
 	status = binderReceiver.receiveUnsignedInt(size);
+	if (status <= 0) {
+		debug_message("receive size failed");
+		exit(1);
+	}
 	status = binderReceiver.receiveUnsignedInt(type);
+	if (status <= 0) {
+		debug_message("receive type failed");
+		exit(1);
+	}
 	if (type == LOC_SUCCESS) {
 		assert(size == HOSTNAME_SIZE + PORT_SIZE);
 		char buffer[size];
@@ -324,8 +362,13 @@ int rpcCall(const char *name, int *argTypes, void **args) {
 		int serverSocket;
 		status = createSocketAndConnect(serverName.c_str(), to_string(port).c_str(), serverSocket);
 		if (status < 0) return status;
-		return clientExecute(serverSocket, functionName, argTypes, args);
+		debug_message("loc returned " + serverName + " " + to_string(port));
+		//status = clientExecute(serverSocket, functionName, argTypes, args);
+		status = 0;
+		close(serverSocket);
+		return status;
 	} else {
+		assert(type == LOC_FAILURE);
 		assert(size == 4);
 		int reasonCode;
 		binderReceiver.receiveInt(reasonCode);
@@ -334,16 +377,14 @@ int rpcCall(const char *name, int *argTypes, void **args) {
 }
 
 int rpcTerminate() {
-    int status;
-
-    if (binderSocket < 0) {
+    int status = 0;
+    if (binderSocket == -1) {
         status = connectToBinder();
     }
-
     if (status == 0) {
         Sender sender(binderSocket);
+        debug_message("sending teriminate");
         status = sender.sendTerminate();
     }
-
     return status;
 }

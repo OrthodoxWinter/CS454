@@ -244,7 +244,7 @@ char *extractFloatArray(char *buffer, float *floatArray, unsigned int length) {
 char *extractUnsignedInt(char *buffer, unsigned int &i) {
 	unsigned int n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	i = ntohl(n);
 	return buffer + length;
 }
@@ -252,7 +252,7 @@ char *extractUnsignedInt(char *buffer, unsigned int &i) {
 char *extractInt(char *buffer, int &i) {
 	int n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	i = ntohl(n);
 	return buffer + length;
 }
@@ -260,7 +260,7 @@ char *extractInt(char *buffer, int &i) {
 char *extractShort(char *buffer, short &s) {
 	short n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	s = ntohs(n);
 	return buffer + length;
 }
@@ -268,7 +268,7 @@ char *extractShort(char *buffer, short &s) {
 char *extractUnsignedShort(char *buffer, unsigned short &s) {
 	short n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	s = ntohs(n);
 	return buffer + length;
 }
@@ -276,7 +276,7 @@ char *extractUnsignedShort(char *buffer, unsigned short &s) {
 char *extractLong(char *buffer, long &l) {
 	long n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	if (!isLittleEndian()) {
 		swap8((char *) &n);
 	}
@@ -287,7 +287,7 @@ char *extractLong(char *buffer, long &l) {
 char *extractFloat(char *buffer, float &f) {
 	float n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	f = ntohl(n);
 	return buffer + length;
 }
@@ -295,7 +295,7 @@ char *extractFloat(char *buffer, float &f) {
 char *extractDouble(char *buffer, double &d) {
 	double n;
 	size_t length = sizeof n;
-	memcpy((char *) &n, buffer, sizeof length);
+	memcpy((char *) &n, buffer, length);
 	if (!isLittleEndian()) {
 		swap8((char *) &n);
 	}
