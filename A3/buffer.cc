@@ -9,9 +9,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <set>
+#include <assert.h>
+#include <iostream>
 #include "rpc.h"
 #include "helpers.h"
-#include <assert.h>
 #include "buffer.h"
 #include "helpers.h"
 
@@ -21,18 +22,28 @@ bool isLittleEndian() {
 	return htonl(47) != 47;
 }
 
-void swap8(void * v) {
+void swap8(void *v) {
     char in[8], out[8];
     memcpy(in, v, 8);
-    out[0] = in[7];
-    out[1] = in[6];
-    out[2] = in[5];
-    out[3] = in[4];
-    out[4] = in[3];
-    out[5] = in[2];
-    out[6] = in[1];
-    out[7] = in[0];
+    out[0] = in[6];
+    out[1] = in[7];
+    out[2] = in[4];
+    out[3] = in[5];
+    out[4] = in[2];
+    out[5] = in[3];
+    out[6] = in[0];
+    out[7] = in[1];
     memcpy(v, out, 8);
+}
+
+void swap4(void *v) {
+	char in[4], out[4];
+    memcpy(in, v, 4);
+    out[0] = in[2];
+    out[1] = in[3];
+    out[2] = in[0];
+    out[3] = in[1];
+    memcpy(v, out, 4);
 }
 
 char *insertShort(short s, char *buffer) {
@@ -75,20 +86,24 @@ char *insertChar(char c, char *buffer) {
 }
 
 char *insertDouble(double d, char *buffer) {
+	debug_message("inserting double " + to_string(d));
 	size_t length = sizeof d;
 	assert(length == 8);
 	memcpy(buffer, (const char*) &d, length);
-	if (!isLittleEndian()) {
+	if (isLittleEndian()) {
 		swap8(buffer);
 	}
 	return buffer + length;
 }
 
 char *insertFloat(float f, char *buffer) {
+	debug_message("inserting float " + to_string(f));
 	size_t length = sizeof f;
 	assert(length == 4);
-	uint32_t n = ntohl(f);
-	memcpy(buffer, (const char*) &n, length);
+	memcpy(buffer, (const char*) &f, length);
+	if (isLittleEndian()) {
+		swap4(buffer);
+	}
 	return buffer + length;
 }
 
@@ -179,8 +194,16 @@ char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
 				buffer = insertShortArray((short *) arg, length, buffer);
 				break;
 
-			case ARG_INT:
+			case ARG_INT: {
+				char *head = buffer;
+				int array[length];
 				buffer = insertIntArray((int *) arg, length, buffer);
+				extractIntArray(head, array, length);
+				for (unsigned int i = 0; i < length; i++) {
+					cout << array[i] << " ";
+				}
+				cout << endl;
+			}
 				break;
 
 			case ARG_LONG:
@@ -292,7 +315,11 @@ char *extractFloat(char *buffer, float &f) {
 	float n;
 	size_t length = sizeof n;
 	memcpy((char *) &n, buffer, length);
-	f = ntohl(n);
+	if (isLittleEndian()) {
+		swap4((char *) &n);
+	}
+	f = n;
+	debug_message("extracted float " + to_string(f));
 	return buffer + length;
 }
 
@@ -300,10 +327,11 @@ char *extractDouble(char *buffer, double &d) {
 	double n;
 	size_t length = sizeof n;
 	memcpy((char *) &n, buffer, length);
-	if (!isLittleEndian()) {
+	if (isLittleEndian()) {
 		swap8((char *) &n);
 	}
 	d = n;
+	debug_message("extracted double " + to_string(d));
 	return buffer + length;
 }
 
@@ -368,7 +396,7 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				if (copy || output) {
 					buffer = extractCharArray(buffer, (char *) args[i], size);
 				} else {
-					buffer = buffer + size * sizeof(char);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;
@@ -377,16 +405,24 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				if (copy || output) {
 					buffer = extractShortArray(buffer, (short *) args[i], size);
 				} else {
-					buffer = buffer + size * sizeof(short);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;
 
 			case ARG_INT: {
 				if (copy || output) {
+					int *blah = (int *) buffer;
+					cout << ntohl(blah[0]) << endl;
 					buffer = extractIntArray(buffer, (int *) args[i], size);
+					int *array = (int *) args[i];
+					for (unsigned int i = 0; i < size; i++) {
+						int n = array[i];
+						cout << n << " ";
+					}
+					cout << endl;
 				} else {
-					buffer = buffer + size * sizeof(int);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;
@@ -395,7 +431,7 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				if (copy || output) {
 					buffer = extractLongArray(buffer, (long *) args[i], size);
 				} else {
-					buffer = buffer + size * sizeof(long);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;
@@ -404,7 +440,7 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				if (copy || output) {
 					buffer = extractDoubleArray(buffer, (double *) args[i], size);
 				} else {
-					buffer = buffer + size * sizeof(double);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;
@@ -413,7 +449,7 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 				if (copy || output) {
 					buffer = extractFloatArray(buffer, (float *) args[i], size);
 				} else {
-					buffer = buffer + size * sizeof(float);
+					buffer = buffer + size * getTypeSize(type);
 				}
 			}
 			break;

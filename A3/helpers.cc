@@ -143,3 +143,17 @@ unsigned int getType(int argType) {
 bool isOutput(int argType) {
 	return (argType & 1 << ARG_OUTPUT) != 0;
 }
+
+unsigned int getTypeSize(unsigned int type) {
+	switch (type) {
+		case ARG_CHAR: return 1;
+		case ARG_SHORT: return 2;
+		case ARG_INT: return 4;
+		case ARG_LONG: return 8;
+		case ARG_DOUBLE: return 9;
+		case ARG_FLOAT: return 4;
+		default: 
+			debug_message("size unknown for type " + to_string(type));
+			exit(1);
+	}
+}

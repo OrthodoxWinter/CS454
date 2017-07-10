@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <bitset>
+#include <iostream>
 #include "helpers.h"
 #include "sender.h"
 #include "buffer.h"
@@ -11,9 +13,10 @@ unsigned int Sender::executeMessageSize(int *argTypes, unsigned int argTypesLeng
 	unsigned int total = 0;
 	for (unsigned int i = 0; i < argTypesLength - 1;  i++) {
 		int argType = argTypes[i];
+		unsigned int type = getType(argType);
 		unsigned int arrayLength = getArrayLength(argType);
 		arrayLength = arrayLength == 0 ? 1 : arrayLength;
-		total += arrayLength;
+		total += arrayLength * getTypeSize(type);
 	}
 	return FUNCTION_NAME_SIZE + 4 + argTypesLength * 4 + total;
 }
@@ -98,6 +101,12 @@ int Sender::sendExecuteMessage(string name, int *argTypes, void **args, unsigned
 	unsigned int size = executeMessageSize(argTypes, argTypesLength);
 	char buffer[size];
 	insertIntoBuffer(name, argTypes, args, buffer);
+	debug_message("execute message buffer of size " + to_string(size));
+	/*for (unsigned int i = 0; i < size; i++) {
+		if (i % 4 == 0) cout << endl;
+		cout << bitset<8>(buffer[i]) << " ";
+	}
+	cout << endl;*/
 	return sendMessage(size, type, buffer);
 }
 

@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <unistd.h>
 #include <utility>
+#include <iostream>
+#include <bitset>
 #include "helpers.h"
 #include "rpc.h"
 #include "structs.h"
@@ -143,6 +145,12 @@ void handleRpcCall(int clientSocket, char *message) {
 	debug_message("got function " + to_string(requested));
 	debug_message("extracting arguments");
 	void *args[argTypesLength - 1];
+
+	/*for (unsigned int i = (FUNCTION_NAME_SIZE + 4 + argTypesLength * 4); i < 12; i++) {
+		if (i % 4 == 0) cout << endl;
+		cout << bitset<8>(message[i]) << " ";
+	}
+	cout << endl;*/
 	extractArguments(bufferHead, argTypes, argTypesLength, args, true);
 
 	skeleton f = NULL;

@@ -64,4 +64,6 @@ unsigned int getType(int argType);
 
 bool isOutput(int argType);
 
+unsigned int getTypeSize(unsigned int type);
+
 #endif
