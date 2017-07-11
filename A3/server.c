@@ -1,5 +1,8 @@
 #include "rpc.h"
 #include "server_function_skels.h"
+#include <iostream>
+
+using namespace std;
 
 int main(int argc, char *argv[]) {
   
@@ -59,9 +62,9 @@ int main(int argc, char *argv[]) {
   argTypes4[0] = (1 << ARG_INPUT) | (ARG_CHAR << 16) | 28;
   argTypes4[1] = 0;
 
-  argTypes11[0] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16) | 3;
-  argTypes11[1] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 3;
-  argTypes11[2] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 3;
+  argTypes11[1] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16) | 4;
+  argTypes11[0] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 5;
+  argTypes11[2] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 1;
   argTypes11[3] = (1 << ARG_INPUT) | (ARG_INT << 16);
   argTypes11[4] = 0;
 
@@ -109,7 +112,9 @@ int main(int argc, char *argv[]) {
   rpcRegister("f0", argTypes0_1, *f0_1_Skel);
 
   /* call rpcExecute */
-  rpcExecute();
+  if (rpcExecute() < 0) {
+    cout << "rpc execute error" << endl;
+  }
 
   /* return */
   return 0;

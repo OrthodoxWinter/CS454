@@ -90,25 +90,28 @@ float* f12(float a[], float b[], int len) {
 
 double f13(int a, char b, short c, float d, double e, long f, int g[], char h[], short i[], float j[], double k[], long l[], int len[]) {
   std::string m(h);
-  int n = std::stoi(m);
   int o = b - 48;
 
   double returnValue = 0;
-  for (int i = 0; i < len[0]; i++) {
-    returnValue += a * g[i];
+  for (int z = 0; z < len[0]; z++) {
+    returnValue += a * g[z];
   }
-  returnValue += n * o;
-  for (int j = 0; j < len[1]; j++) {
-    returnValue += c * i[j];
+
+  for (int z = 0; z < m.length(); z++) {
+    returnValue += o * (h[z] - 48);
   }
-  for (int i = 0; i < len[2]; i++) {
-    returnValue += d * j[i];
+  
+  for (int z = 0; z < len[1]; z++) {
+    returnValue += c * i[z];
   }
-  for (int i = 0; i < len[3]; i++) {
-    returnValue += e * k[i];
+  for (int z = 0; z < len[2]; z++) {
+    returnValue += d * j[z];
   }
-  for (int i = 0; i < len[4]; i++) {
-    returnValue += f * l[i];
+  for (int z = 0; z < len[3]; z++) {
+    returnValue += e * k[z];
+  }
+  for (int z = 0; z < len[4]; z++) {
+    returnValue += f * l[z];
   }
   printf("ACTUAL return of f13 is: %f\n", returnValue);
   return returnValue;

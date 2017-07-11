@@ -43,7 +43,7 @@ int f4_Skel(int *argTypes, void **args) {
 }
 
 int f11_Skel(int *argTypes, void **args) {
-  *args = f11((double *) args[1], (double *) args[2], *((int *) args[3]));
+  args[1] = f11((double *) args[0], (double *) args[2], *((int *) args[3]));
   return 0;
 }
 

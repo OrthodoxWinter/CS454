@@ -121,7 +121,7 @@ int main() {
   argTypes11[4] = 0;
 
   float rtn12[3] = {0, 0, 0};
-  float a12[3] = {0.1, 0.111111, 0.3};
+  float a12[3] = {0.1, 0.2, 0.3};
   float b12[3] = {0.3, 0.4, 0.5};
   int c12 = 3;
   int count12 = 4;
@@ -147,8 +147,8 @@ int main() {
   int g13[2] = {2, 3};
   char h13[3] = {'1', '2', '\0'}; 
   short i13[2] = {5, 7};
-  float j13[4] = {0.2, 0.7, 0.001, 0.09};
-  double k13[3] = {0.33, 4.5, 11.2};
+  float j13[4] = {0.2, 0.7};
+  double k13[3] = {0.33, 4.5};
   long l13[1] = {10};
   int len13[5] = {2, 2, 4, 3, 1};
   int count13 = 14;
@@ -201,130 +201,26 @@ int main() {
   args0_1[1] = (void *)&a0_1;
   args0_1[2] = (void *)&b0_1;
 
+  int argTypesLongRunning[1] = {0};
 
-  /* rpcCalls */
-  int s0 = rpcCall("f0", argTypes0, args0);
-  /* test the return f0 */
-  printf("\nEXPECTED return of f0 is: %d\n", a0 + b0);
-  if (s0 >= 0) { 
-    printf("ACTUAL return of f0 is: %d\n", *((int *)(args0[0])));
-  }
-  else {
-    printf("Error: %d\n", s0);
-  }
-
-
-  int s1 = rpcCall("f1", argTypes1, args1);
-  /* test the return of f1 */
-  printf("\nEXPECTED return of f1 is: %ld\n", a1 + b1 * c1 - d1);
-  if (s1 >= 0) { 
-    printf("ACTUAL return of f1 is: %ld\n", *((long *)(args1[0])));
+  int s1 = rpcCall("longRunning", argTypesLongRunning, NULL);
+  if (s1 >= 0) {
+    printf("Long running completed sucessfully");
+    printf("\n");
   }
   else {
     printf("Error: %d\n", s1);
   }
 
+  rpcTerminate();
 
-  int s2 = rpcCall("f2", argTypes2, args2);
-  /* test the return of f2 */
-  printf("\nEXPECTED return of f2 is: 31234\n");
-  if (s2 >= 0) {
-    printf("ACTUAL return of f2 is: %s\n", (char *)args2[0]);
-  }
-  else {
-    printf("Error: %d\n", s2);
-  }
-
-
-  int s3 = rpcCall("f3", argTypes3, args3);
-  /* test the return of f3 */
-  printf(
-    "\nEXPECTED return of f3 is: 110 109 108 107 106 105 104 103 102 101 11\n"
-  );
-
-  if (s3 >= 0) {
-    printf("ACTUAL return of f3 is: ");
-    int i;
-    for (i = 0; i < 11; i++) {
-      printf(" %ld", *(((long *)args3[0]) + i));
-    }
+  s1 = rpcCall("longRunning", argTypesLongRunning, NULL);
+  if (s1 >= 0) {
+    printf("Long running completed sucessfully");
     printf("\n");
   }
   else {
-    printf("Error: %d\n", s3);
-  } 
-
-  int s4 = rpcCall("f4", argTypes4, args4);
-  /* test the return of f4 */
-  printf("\ncalling f4 to print an non existed file on the server");
-  printf("\nEXPECTED return of f4: some integer other than 0");
-  printf("\nACTUAL return of f4: %d\n", s4);
-
-  int s11 = rpcCall("f11", argTypes11, args11);
-  if (s11 >= 0) {
-    printf("ACTUAL return of f11 is: ");
-    for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[1]) + i));
-    }
-    printf("\n");
-  }
-  else {
-    printf("Error: %d\n", s11);
-  }
-
-  int s12 = rpcCall("f12", argTypes12, args12);
-  if (s12 >= 0) {
-    printf("ACTUAL return of f12 is: ");
-    for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((float *)args12[0]) + i));
-    }
-    printf("\n");
-  }
-  else {
-    printf("Error: %d\n", s12);
-  }
-
-  int s13 = rpcCall("f13", argTypes13, args13);
-  if (s13 >= 0) { 
-    printf("ACTUAL return of f13 is: %f\n", *((double *)(args13[0])));
-  }
-  else {
-    printf("Error: %d\n", s13);
-  }
-
-  int s14 = rpcCall("f0", argTypes0_1, args0_1);
-  if (s14 >= 0) { 
-    printf("ACTUAL return of f0 is: %f\n", *((double *)(args0_1[0])));
-  }
-  else {
-    printf("Error: %d\n", s14);
-  }
-
-  argTypes11[0] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16);
-  s11 = rpcCall("f11", argTypes11, args11);
-  if (s11 >= 0) {
-    printf("ACTUAL return of f11 is: ");
-    for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[1]) + i));
-    }
-    printf("\n");
-  }
-  else {
-    printf("Error: %d\n", s11);
-  }
-
-  argTypes11[0] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 3;
-  argTypes11[1] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16);
-  s11 = rpcCall("f11", argTypes11, args11);
-  if (s11 >= 0) {
-    printf("ACTUAL return of f11 is: ");
-    for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[1]) + i));
-    }
-    printf("\n");
-  }
-  else {
-    printf("Error: %d\n", s11);
+    printf("Error: %d\n", s1);
   }
 
   /* rpcTerminate */
