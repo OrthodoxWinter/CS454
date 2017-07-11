@@ -87,7 +87,6 @@ void handleRegister(Sender &sender, char *buffer, unsigned int bufferSize) {
 			cout << buffer[i];
 		}
 	}*/
-	cout << endl;
 	debug_message("handling register request");
     unsigned short port;
     char * bufferPointer = buffer;

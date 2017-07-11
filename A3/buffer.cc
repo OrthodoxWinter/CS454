@@ -194,16 +194,8 @@ char *insertIntoBuffer(string name, int *argTypes, void **args, char *buffer) {
 				buffer = insertShortArray((short *) arg, length, buffer);
 				break;
 
-			case ARG_INT: {
-				char *head = buffer;
-				int array[length];
+			case ARG_INT:
 				buffer = insertIntArray((int *) arg, length, buffer);
-				extractIntArray(head, array, length);
-				for (unsigned int i = 0; i < length; i++) {
-					cout << array[i] << " ";
-				}
-				cout << endl;
-			}
 				break;
 
 			case ARG_LONG:
@@ -412,15 +404,7 @@ char *extractArguments(char *buffer, int *argTypes, unsigned int argTypesLength,
 
 			case ARG_INT: {
 				if (copy || output) {
-					int *blah = (int *) buffer;
-					cout << ntohl(blah[0]) << endl;
 					buffer = extractIntArray(buffer, (int *) args[i], size);
-					int *array = (int *) args[i];
-					for (unsigned int i = 0; i < size; i++) {
-						int n = array[i];
-						cout << n << " ";
-					}
-					cout << endl;
 				} else {
 					buffer = buffer + size * getTypeSize(type);
 				}
