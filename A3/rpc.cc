@@ -188,13 +188,15 @@ int processRequest(int socket, bool &terminate) {
 		return SOCKET_CLOSED;
 	} else if (status < 0) {
 		debug_message("receive size failed while processing request for rpc execute");
-		exit(1);
+		return SOCKET_RECEIVE_FAIL;
 	}
 	unsigned int messageType;
 	status = receiver.receiveUnsignedInt(messageType);
-	if (status < 0) {
+	if (status == 0) {
+		return SOCKET_CLOSED;
+	} else if (status < 0) {
 		debug_message("receive type failed while processing request for rpc execute");
-		exit(1);
+		return SOCKET_RECEIVE_FAIL;
 	}
 	if (messageType == TERMINATE) {
 		if (socket == binderSocket) {
@@ -232,7 +234,7 @@ int rpcExecute() {
 	while (!terminate) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
-			exit(1);
+			return SELECT_FAIL;
 		}
 		for (int socket : all_sockets) {
 			if (FD_ISSET(socket, &read_fds)) {
@@ -325,7 +327,6 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 			extractArguments(bufferHead, returnedArgTypes, argTypesLength, args, false);
 			return 0;
 		}
-		break;
 
 		case EXECUTE_FAILURE: {
 			int returnCode;
@@ -333,14 +334,11 @@ int clientExecute(int socket, string name, int *argTypes, void **args) {
 			extractInt(returnedMessage, returnCode);
 			return returnCode;
 		}
-		break;
 
 		default:
-		debug_message("received known message type from server while request execute from client: " + to_string(type));
-		exit(1);
-		break;
+			debug_message("received known message type from server while request execute from client: " + to_string(type));
+			return UNEXPECTED_MESSAGE;
 	}
-	return -1;
 }
 
 int rpcCall(const char *name, int *argTypes, void **args) {
@@ -361,12 +359,12 @@ int rpcCall(const char *name, int *argTypes, void **args) {
 	status = binderReceiver.receiveUnsignedInt(size);
 	if (status <= 0) {
 		debug_message("receive size failed");
-		exit(1);
+		return CANNOT_RECEIVE_FROM_BINDER;
 	}
 	status = binderReceiver.receiveUnsignedInt(type);
 	if (status <= 0) {
 		debug_message("receive type failed");
-		exit(1);
+		return CANNOT_RECEIVE_FROM_BINDER;
 	}
 	if (type == LOC_SUCCESS) {
 		assert(size == HOSTNAME_SIZE + PORT_SIZE);
@@ -403,6 +401,8 @@ int rpcTerminate() {
         Sender sender(binderSocket);
         debug_message("sending teriminate");
         status = sender.sendTerminate();
+        close(binderSocket);
+        binderSocket = -1;
     }
     return status;
 }
