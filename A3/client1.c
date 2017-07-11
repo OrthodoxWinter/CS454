@@ -8,8 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
+#include <iostream>
 
 #include "rpc.h"
+
+using namespace std;
 
 #define CHAR_ARRAY_LENGTH 100
 
@@ -99,6 +103,105 @@ int main() {
   args4 = (void **)malloc(count4 * sizeof(void *));
   args4[0] = (void *)a4;
 
+  double rtn11[3] = {0, 0, 0};
+  double a11[3] = {0.1, 0.2, 0.3};
+  double b11[3] = {0.3, 0.4, 0.5};
+  int c11 = 3;
+  int count11 = 4;
+  int argTypes11[count11 + 1];
+  void **args11 = (void **)malloc(count11 * sizeof(void *));
+  args11[0] = (void *) rtn11;
+  args11[1] = (void *) a11;
+  args11[2] = (void *) b11;
+  args11[3] = (void *) &c11;
+  argTypes11[0] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16) | 3;
+  argTypes11[1] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 3;
+  argTypes11[2] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16) | 3;
+  argTypes11[3] = (1 << ARG_INPUT) | (ARG_INT << 16);
+  argTypes11[4] = 0;
+
+  float rtn12[3] = {0, 0, 0};
+  float a12[3] = {0.1, 0.2, 0.3};
+  float b12[3] = {0.3, 0.4, 0.5};
+  int c12 = 3;
+  int count12 = 4;
+  int argTypes12[count12 + 1];
+  void **args12 = (void **)malloc(count12 * sizeof(void *));
+  args12[0] = (void *) rtn12;
+  args12[1] = (void *) a12;
+  args12[2] = (void *) b12;
+  args12[3] = (void *) &c12;
+  argTypes12[0] = (1 << ARG_OUTPUT) | (ARG_FLOAT << 16) | 3;
+  argTypes12[1] = (1 << ARG_INPUT) | (ARG_FLOAT << 16) | 3;
+  argTypes12[2] = (1 << ARG_INPUT) | (ARG_FLOAT << 16) | 3;
+  argTypes12[3] = (1 << ARG_INPUT) | (ARG_INT << 16);
+  argTypes12[4] = 0;
+
+  double rtn13 = 0;
+  int a13 = 1;
+  char b13 = '2'; 
+  short c13 = 3;
+  float d13 = 0.4;
+  double e13 = 0.5;
+  long f13 = 6;
+  int g13[2] = {2, 3};
+  char h13[3] = {'1', '2', '\0'}; 
+  short i13[2] = {5, 7};
+  float j13[4] = {0.2, 0.7};
+  double k13[3] = {0.33, 4.5};
+  long l13[1] = {10};
+  int len13[5] = {2, 2, 4, 3, 1};
+  int count13 = 14;
+  void **args13 = (void **)malloc(count13 * sizeof(void *));
+  args13[0] = (void *) &rtn13;
+  args13[1] = (void *) &a13;
+  args13[2] = (void *) &b13;
+  args13[3] = (void *) &c13;
+  args13[4] = (void *) &d13;
+  args13[5] = (void *) &e13;
+  args13[6] = (void *) &f13;
+  args13[7] = (void *) g13;
+  args13[8] = (void *) h13;
+  args13[9] = (void *) i13;
+  args13[10] = (void *) j13;
+  args13[11] = (void *) k13;
+  args13[12] = (void *) l13;
+  args13[13] = (void *) len13;
+  int argTypes13[count13 + 1];
+  argTypes13[0] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16);
+  argTypes13[1] = (1 << ARG_OUTPUT) | (ARG_INT << 16);
+  argTypes13[2] = (1 << ARG_OUTPUT) | (ARG_CHAR << 16);
+  argTypes13[3] = (1 << ARG_OUTPUT) | (ARG_SHORT << 16);
+  argTypes13[4] = (1 << ARG_OUTPUT) | (ARG_FLOAT << 16);
+  argTypes13[5] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16);
+  argTypes13[6] = (1 << ARG_OUTPUT) | (ARG_LONG << 16);
+  argTypes13[7] = (1 << ARG_OUTPUT) | (ARG_INT << 16) | 2;
+  argTypes13[8] = (1 << ARG_OUTPUT) | (ARG_CHAR << 16) | 3;
+  argTypes13[9] = (1 << ARG_OUTPUT) | (ARG_SHORT << 16) | 2;
+  argTypes13[10] = (1 << ARG_OUTPUT) | (ARG_FLOAT << 16) | 4;
+  argTypes13[11] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16) | 3;
+  argTypes13[12] = (1 << ARG_OUTPUT) | (ARG_LONG << 16) | 1;
+  argTypes13[13] = (1 << ARG_OUTPUT) | (ARG_INT << 16) | 5;
+  argTypes13[14] = 0;
+
+  double a0_1 = 5.7;
+  int b0_1 = 10;
+  int count0_1 = 3;
+  double return0_1;
+  int argTypes0_1[count0_1 + 1];
+  void **args0_1;
+
+  argTypes0_1[0] = (1 << ARG_OUTPUT) | (ARG_DOUBLE << 16);
+  argTypes0_1[1] = (1 << ARG_INPUT) | (ARG_DOUBLE << 16);
+  argTypes0_1[2] = (1 << ARG_INPUT) | (ARG_INT << 16);
+  argTypes0_1[3] = 0;
+    
+  args0_1 = (void **)malloc(count0_1 * sizeof(void *));
+  args0_1[0] = (void *)&return0_1;
+  args0_1[1] = (void *)&a0_1;
+  args0_1[2] = (void *)&b0_1;
+
+
   /* rpcCalls */
   int s0 = rpcCall("f0", argTypes0, args0);
   /* test the return f0 */
@@ -156,6 +259,46 @@ int main() {
   printf("\ncalling f4 to print an non existed file on the server");
   printf("\nEXPECTED return of f4: some integer other than 0");
   printf("\nACTUAL return of f4: %d\n", s4);
+
+  int s11 = rpcCall("f11", argTypes11, args11);
+  if (s11 >= 0) {
+    printf("ACTUAL return of f11 is: ");
+    for (int i = 0; i < 3; i++) {
+      printf(" %f", *(((double *)args11[0]) + i));
+    }
+    printf("\n");
+  }
+  else {
+    printf("Error: %d\n", s11);
+  }
+
+  int s12 = rpcCall("f12", argTypes12, args12);
+  if (s12 >= 0) {
+    printf("ACTUAL return of f12 is: ");
+    for (int i = 0; i < 3; i++) {
+      printf(" %f", *(((float *)args12[0]) + i));
+    }
+    printf("\n");
+  }
+  else {
+    printf("Error: %d\n", s12);
+  }
+
+  int s13 = rpcCall("f13", argTypes13, args13);
+  if (s13 >= 0) { 
+    printf("ACTUAL return of f13 is: %f\n", *((double *)(args13[0])));
+  }
+  else {
+    printf("Error: %d\n", s13);
+  }
+
+  int s14 = rpcCall("f0", argTypes0_1, args0_1);
+  if (s14 >= 0) { 
+    printf("ACTUAL return of f0 is: %f\n", *((double *)(args0_1[0])));
+  }
+  else {
+    printf("Error: %d\n", s14);
+  }
 
   /* rpcTerminate */
   printf("\ndo you want to terminate? y/n: ");

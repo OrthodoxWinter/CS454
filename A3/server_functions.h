@@ -20,3 +20,13 @@ char* f2(float a, double b);             /* return: OUT string; a, b: IN */
 void f3(long a[]);                       /* a: INOUT array */
 
 void f4(char a[]);                       /* a: IN array */
+
+double* f11(double a[], double b[], int len);
+
+float* f12(float a[], float b[], int len);
+
+double f13(int a, char b, short c, float d, double e, long f, int g[], char h[], short i[], float j[], double k[], long l[], int len[]);
+
+void longRunning();
+
+double f0(double a, int b);
