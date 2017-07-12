@@ -6,7 +6,7 @@ g++ -L. server.o server_functions.o server_function_skels.o -lrpc -lpthread -o s
 To link client, do
 g++ -L. client.o -lrpc -lpthread -o client
 
-our client and server uses c++11 and the c++11 thread library
+our client and server RPC uses c++11 and the c++11 thread library
 
 Name: Bo Wen Xie
 Username: bwxie
