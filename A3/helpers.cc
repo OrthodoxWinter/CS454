@@ -13,7 +13,7 @@
 #include "rpc.h"
 #include "helpers.h"
 
-#define DEBUG 1;
+//#define DEBUG 1;
 
 int send_all(int socket, const char *buf, unsigned int len) {
 	unsigned int sent = 0;
