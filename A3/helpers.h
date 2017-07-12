@@ -44,7 +44,8 @@ enum ReasonCode {
 	SERVER_EXECUTE_FAILED = -17,
 	CANNOT_RECEIVE_FROM_BINDER = -18,
 	SELECT_FAIL = -19,
-	NOT_IMPLEMENTED = -20
+	NOT_IMPLEMENTED = -20,
+	FUNCTION_ALREADY_REGISTERED = 1
 };
 
 int send_all(int socket, const char *buf, unsigned int len);

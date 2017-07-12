@@ -27,7 +27,8 @@ list<server_location> serversRoundRobin;
 set<int> serverSockets;
 map<server_location, list<function_info>> serverFunctions;
 
-void registerServerFunction(string serverName, unsigned short port, string functionName, int *argTypes) {
+int registerServerFunction(string serverName, unsigned short port, string functionName, int *argTypes) {
+	int status = 0;
     bool inQueue = false;
     for (list<server_location>::iterator it = serversRoundRobin.begin(); it != serversRoundRobin.end(); it++) {
         server_location &server = (*it);
@@ -50,6 +51,7 @@ void registerServerFunction(string serverName, unsigned short port, string funct
     	for (list<function_info>::iterator it = functions.begin(); it != functions.end(); it++) {
     		if (newFunction == *it) {
     			functions.erase(it);
+    			status = FUNCTION_ALREADY_REGISTERED;
     			break;
     		}
     	}
@@ -59,6 +61,7 @@ void registerServerFunction(string serverName, unsigned short port, string funct
     	functions.push_back(newFunction);
     	serverFunctions[newServer] = functions;
     }
+    return status;
 }
 
 server_location getServerLocation(function_info &functionInfo) {
@@ -112,8 +115,8 @@ void handleRegister(Sender &sender, char *buffer, unsigned int bufferSize) {
     int argTypes[argTypesLength];
     extractIntArray(bufferPointer, argTypes, argTypesLength);
 
-    registerServerFunction(serverName, port, functionName, argTypes);
-    sender.sendRegisterSuccess(0);
+    int status = registerServerFunction(serverName, port, functionName, argTypes);
+    sender.sendRegisterSuccess(status);
 }
 
 void handleLoc(Sender &sender, char *buffer, unsigned int bufferSize) {
