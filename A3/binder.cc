@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
 	}
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(34611);
+	server_addr.sin_port = htons(0);
 	memset(server_addr.sin_zero, '\0', sizeof server_addr.sin_zero);
 	if (bind(listener, (struct sockaddr*) &server_addr, server_addr_len) < 0) {
 		debug_message("can't bind");
