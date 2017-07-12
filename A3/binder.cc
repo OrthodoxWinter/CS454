@@ -224,8 +224,8 @@ int main(int argc, char *argv[]) {
 	gethostname(hostname_buf, HOSTNAME_SIZE - 1);
 	string hostname(hostname_buf);
 
-	cout << "SERVER_ADDRESS " << hostname << endl;
-	cout << "SERVER_PORT " << ntohs(server_addr.sin_port) << endl;
+	cout << "BINDER_ADDRESS " << hostname << endl;
+	cout << "BINDER_PORT " << ntohs(server_addr.sin_port) << endl;
 
 	fd_set master_fds, read_fds;
 	int fdmax;
