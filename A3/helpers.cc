@@ -13,7 +13,7 @@
 #include "rpc.h"
 #include "helpers.h"
 
-//#define DEBUG 1;
+#define DEBUG 1;
 
 int send_all(int socket, const char *buf, unsigned int len) {
 	unsigned int sent = 0;
@@ -150,7 +150,7 @@ unsigned int getTypeSize(unsigned int type) {
 		case ARG_SHORT: return 2;
 		case ARG_INT: return 4;
 		case ARG_LONG: return 8;
-		case ARG_DOUBLE: return 9;
+		case ARG_DOUBLE: return 8;
 		case ARG_FLOAT: return 4;
 		default: 
 			debug_message("size unknown for type " + to_string(type));
