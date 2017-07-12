@@ -116,7 +116,7 @@ int rpcRegister(const char *name, int *argTypes, skeleton f) {
 		}
 		pair<function_info, skeleton> newPair(functionInfo, f);
 		functions.push_back(newPair);
-		return 0;
+		return reasonCode;
 	} else if (messageType == REGISTER_FAILURE) {
 		debug_message("got REGISTER_FAILURE");
 		return reasonCode;
