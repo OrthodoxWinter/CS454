@@ -205,7 +205,7 @@ int main() {
   if (s11 >= 0) {
     printf("ACTUAL return of f11 is: ");
     for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[0]) + i));
+      printf(" %f", *(((double *)args11[1]) + i));
     }
     printf("\n");
   }
@@ -217,7 +217,7 @@ int main() {
   if (s11 >= 0) {
     printf("ACTUAL return of f11 is: ");
     for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[0]) + i));
+      printf(" %f", *(((double *)args11[1]) + i));
     }
     printf("\n");
   }
@@ -229,7 +229,7 @@ int main() {
   if (s11 >= 0) {
     printf("ACTUAL return of f11 is: ");
     for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[0]) + i));
+      printf(" %f", *(((double *)args11[1]) + i));
     }
     printf("\n");
   }
@@ -247,7 +247,7 @@ int main() {
   if (s11 >= 0) {
     printf("ACTUAL return of f11 is: ");
     for (int i = 0; i < 3; i++) {
-      printf(" %f", *(((double *)args11[0]) + i));
+      printf(" %f", *(((double *)args11[1]) + i));
     }
     printf("\n");
   }
