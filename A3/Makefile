@@ -1,13 +1,14 @@
-all: binder server client
+CXX = g++ -std=c++11 -lpthread -Wall -Wextra -MMD
 
-server: server.c server_functions.c server_function_skels.c buffer.cc helpers.cc receiver.cc sender.cc rpc.cc
-	g++ server.c server_functions.c server_function_skels.c buffer.cc helpers.cc receiver.cc sender.cc rpc.cc -o server -std=c++11 -lpthread -Wall -Werror
+.PHONY : all clean
 
-binder: binder.cc buffer.cc helpers.cc receiver.cc sender.cc
-	g++ binder.cc buffer.cc helpers.cc receiver.cc sender.cc -o binder -std=c++11 -Wall -Werror
+all : binder
+	${CXX} -c rpc.cc
+	ar rcs librpc.a buffer.o helpers.o receiver.o sender.o rpc.o
 
-client: client1.c buffer.cc helpers.cc receiver.cc sender.cc rpc.cc
-	g++ client1.c buffer.cc helpers.cc receiver.cc sender.cc rpc.cc -o client -std=c++11 -lpthread -Wall -Werror
+binder : binder.o buffer.o helpers.o receiver.o sender.o
+	${CXX} -c binder.cc buffer.cc helpers.cc receiver.cc sender.cc
+	${CXX} $^ -o $@
 
-clean: 
-	rm -f binder server client
+clean :
+	rm -f *.d *.o binder librpc.a

@@ -4,7 +4,7 @@
 #include <string>
 #include <set>
 
-#define HOSTNAME_SIZE 64
+#define HOSTNAME_SIZE 256
 #define FUNCTION_NAME_SIZE 64
 #define PORT_SIZE 2
 
@@ -43,7 +43,8 @@ enum ReasonCode {
 	FUNCTION_NOT_FOUND = -16,
 	SERVER_EXECUTE_FAILED = -17,
 	CANNOT_RECEIVE_FROM_BINDER = -18,
-	SELECT_FAIL = -19
+	SELECT_FAIL = -19,
+	NOT_IMPLEMENTED = -20
 };
 
 int send_all(int socket, const char *buf, unsigned int len);

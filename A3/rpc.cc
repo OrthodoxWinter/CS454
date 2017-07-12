@@ -43,7 +43,6 @@ int connectToBinder() {
 		return 0;
 	}
 
-	/*
 	const char *binderAddress = getenv("BINDER_ADDRESS");
 	const char *binderPort = getenv("BINDER_PORT");
 
@@ -54,9 +53,8 @@ int connectToBinder() {
 	if (binderPort == NULL) {
 		return NO_BINDER_PORT_ENV;
 	}
-	*/
 
-	return createSocketAndConnect("ubuntu", "34611", binderSocket);
+	return createSocketAndConnect(binderAddress, binderPort, binderSocket);
 }
 
 int rpcInit() {
@@ -405,4 +403,8 @@ int rpcTerminate() {
         binderSocket = -1;
     }
     return status;
+}
+
+int rpcCacheCall(const char* name, int* argTypes, void** args) {
+	return NOT_IMPLEMENTED;
 }
