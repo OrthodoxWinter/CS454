@@ -229,10 +229,12 @@ int rpcExecute() {
 	all_sockets.insert(listeningSocket);
 	all_sockets.insert(binderSocket);
 	bool terminate = false;
+	int status = 0;
 	while (!terminate) {
 		read_fds = master_fds;
 		if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) < 0) {
-			return SELECT_FAIL;
+			status = SELECT_FAIL;
+			break;
 		}
 		for (int socket : all_sockets) {
 			if (FD_ISSET(socket, &read_fds)) {
@@ -242,7 +244,7 @@ int rpcExecute() {
 						fdmax = new_client_socket;
 					}
 				} else {
-					int status = processRequest(socket, terminate);
+					status = processRequest(socket, terminate);
 					if (status == SOCKET_CLOSED) {
 						debug_message("closing connection to client");
 						FD_CLR(socket, &master_fds);
@@ -251,7 +253,7 @@ int rpcExecute() {
 						close(socket);
 					} else if (status < 0) {
 						debug_message("rpc execute failed with status " + to_string(status));
-						return status;
+						break;
 					}
 					if (terminate) {
 						break;
@@ -270,7 +272,7 @@ int rpcExecute() {
 	listeningSocket = -1;
 	localHostname = "";
 	localPort = 0;
-	return 0;
+	return status;
 }
 
 int clientExecute(int socket, string name, int *argTypes, void **args) {
